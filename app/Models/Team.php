@@ -5,7 +5,6 @@ namespace App\Models;
 use Database\Factories\TeamFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Laravel\Jetstream\Events\TeamCreated;
 use Laravel\Jetstream\Events\TeamDeleted;
 use Laravel\Jetstream\Events\TeamUpdated;
@@ -49,28 +48,18 @@ class Team extends JetstreamTeam
         ];
     }
 
-    public function dataSources(): HasMany
+    public function notifyChannels(): HasMany
     {
-        return $this->hasMany(DataSource::class);
+        return $this->hasMany(NotifyChannel::class);
     }
 
-    public function alerts(): HasMany
+    public function notifyTemplates(): HasMany
     {
-        return $this->hasMany(AnalyticsAlert::class);
+        return $this->hasMany(NotifyTemplate::class);
     }
 
-    public function recommendations(): HasMany
+    public function notifyLogs(): HasMany
     {
-        return $this->hasMany(Recommendation::class);
-    }
-
-    public function dashboards(): HasMany
-    {
-        return $this->hasMany(AnalyticsDashboard::class);
-    }
-
-    public function businessDna(): \Illuminate\Database\Eloquent\Relations\HasOne
-    {
-        return $this->hasOne(BusinessDnaProfile::class);
+        return $this->hasMany(NotifyLog::class);
     }
 }

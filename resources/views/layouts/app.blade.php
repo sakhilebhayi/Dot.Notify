@@ -4,14 +4,14 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Dot.Analytics</title>
+    <title>Dot.Notify</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>tailwind.config = { corePlugins: { preflight: false } }</script>
     <style>
-        :root { --accent: #0ea5e9; --accent-rgb: 14,165,233; }
+        :root { --accent: #fb923c; --accent-rgb: 251,146,60; }
         *, *::before, *::after { box-sizing: border-box; }
         body { margin:0; background:#09090b; color:#f4f4f5; font-family:'Inter',system-ui,sans-serif; font-size:14px; line-height:1.5; }
         .material-symbols-rounded { font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24; line-height:1; user-select:none; }
@@ -19,15 +19,15 @@
 
         /* Sidebar */
         .sidebar { position:fixed; left:0; top:0; width:260px; height:100vh; background:#0d0d10; border-right:1px solid rgba(255,255,255,0.06); display:flex; flex-direction:column; z-index:40; overflow:hidden; }
-        .sidebar::before { content:''; position:absolute; top:-80px; left:-80px; width:320px; height:320px; background:radial-gradient(circle, rgba(14,165,233,0.1) 0%, transparent 65%); pointer-events:none; }
+        .sidebar::before { content:''; position:absolute; top:-80px; left:-80px; width:320px; height:320px; background:radial-gradient(circle, rgba(251,146,60,0.1) 0%, transparent 65%); pointer-events:none; }
 
         .sidebar-brand { padding:20px 18px 14px; display:flex; align-items:center; gap:11px; flex-shrink:0; }
-        .brand-icon { width:36px; height:36px; border-radius:10px; background:rgba(14,165,233,0.12); border:1px solid rgba(14,165,233,0.22); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-        .brand-icon .material-symbols-rounded { font-size:18px; color:#0ea5e9; }
+        .brand-icon { width:36px; height:36px; border-radius:10px; background:rgba(251,146,60,0.12); border:1px solid rgba(251,146,60,0.22); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+        .brand-icon .material-symbols-rounded { font-size:18px; color:#fb923c; }
         .brand-name { font-family:'Syne',sans-serif; font-size:14.5px; font-weight:700; color:#f4f4f5; letter-spacing:-0.01em; line-height:1.2; }
         .brand-status { display:flex; align-items:center; gap:5px; margin-top:3px; }
-        .live-dot { width:6px; height:6px; border-radius:50%; background:#0ea5e9; flex-shrink:0; animation:live-pulse 2.8s ease-in-out infinite; }
-        @keyframes live-pulse { 0%,100% { opacity:1; box-shadow:0 0 0 0 rgba(14,165,233,0.45); } 60% { opacity:.6; box-shadow:0 0 0 5px rgba(14,165,233,0); } }
+        .live-dot { width:6px; height:6px; border-radius:50%; background:#fb923c; flex-shrink:0; animation:live-pulse 2.8s ease-in-out infinite; }
+        @keyframes live-pulse { 0%,100% { opacity:1; box-shadow:0 0 0 0 rgba(251,146,60,0.45); } 60% { opacity:.6; box-shadow:0 0 0 5px rgba(251,146,60,0); } }
         .brand-subtitle { font-size:10px; font-weight:500; color:#3f3f46; text-transform:uppercase; letter-spacing:0.09em; }
 
         .sidebar-divider { height:1px; background:rgba(255,255,255,0.06); margin:4px 14px 8px; }
@@ -36,12 +36,12 @@
         .nav-section-label { font-size:10px; font-weight:600; color:#3f3f46; text-transform:uppercase; letter-spacing:0.1em; padding:14px 8px 5px; }
         .nav-item { display:flex; align-items:center; gap:9px; padding:7.5px 10px; border-radius:8px; font-size:13px; font-weight:500; color:#71717a; text-decoration:none; transition:background .13s,color .13s,transform .13s; margin-bottom:1px; }
         .nav-item:hover { background:rgba(255,255,255,0.05); color:#d4d4d8; transform:translateX(1px); }
-        .nav-item.active { background:rgba(14,165,233,0.1); color:#0ea5e9; font-weight:600; }
+        .nav-item.active { background:rgba(251,146,60,0.1); color:#fb923c; font-weight:600; }
         .nav-icon { font-size:17px; width:20px; text-align:center; flex-shrink:0; }
 
         .sidebar-footer { padding:10px 14px 14px; border-top:1px solid rgba(255,255,255,0.06); flex-shrink:0; }
         .user-row { display:flex; align-items:center; gap:9px; padding:8px 6px; border-radius:8px; }
-        .user-avatar { width:28px; height:28px; border-radius:50%; background:rgba(14,165,233,0.18); border:1px solid rgba(14,165,233,0.28); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#0ea5e9; flex-shrink:0; font-family:'Syne',sans-serif; }
+        .user-avatar { width:28px; height:28px; border-radius:50%; background:rgba(251,146,60,0.18); border:1px solid rgba(251,146,60,0.28); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#fb923c; flex-shrink:0; font-family:'Syne',sans-serif; }
         .user-name { font-size:12px; font-weight:600; color:#d4d4d8; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
         .user-team { font-size:10px; color:#52525b; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 
@@ -61,15 +61,15 @@
         .dot-card:hover { border-color:rgba(255,255,255,0.11); }
         .metric-val { font-family:'JetBrains Mono',monospace; font-weight:500; letter-spacing:-0.02em; }
         .dot-input { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:8px; color:#f4f4f5; font-family:'Inter',sans-serif; font-size:13px; padding:8px 12px; width:100%; transition:border-color .15s,box-shadow .15s; outline:none; }
-        .dot-input:focus { border-color:rgba(14,165,233,0.45); box-shadow:0 0 0 3px rgba(14,165,233,0.07); }
+        .dot-input:focus { border-color:rgba(251,146,60,0.45); box-shadow:0 0 0 3px rgba(251,146,60,0.07); }
         .dot-input::placeholder { color:#3f3f46; }
         .dot-btn { display:inline-flex; align-items:center; gap:6px; padding:7px 14px; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; transition:all .14s; border:none; text-decoration:none; font-family:'Inter',sans-serif; }
-        .dot-btn-primary { background:#0ea5e9; color:#09090b; }
+        .dot-btn-primary { background:#fb923c; color:#09090b; }
         .dot-btn-primary:hover { filter:brightness(1.1); }
         .dot-btn-ghost { background:rgba(255,255,255,0.06); color:#a1a1aa; border:1px solid rgba(255,255,255,0.08); }
         .dot-btn-ghost:hover { background:rgba(255,255,255,0.1); color:#f4f4f5; }
         .dot-badge { display:inline-flex; align-items:center; padding:2px 8px; border-radius:100px; font-size:11px; font-weight:600; }
-        .dot-badge-accent { background:rgba(14,165,233,0.12); color:#0ea5e9; }
+        .dot-badge-accent { background:rgba(251,146,60,0.12); color:#fb923c; }
         select.dot-input option { background:#1a1a1f; }
     </style>
     @livewireStyles
@@ -81,13 +81,13 @@
     <aside class="sidebar">
         <div class="sidebar-brand">
             <div class="brand-icon">
-                <span class="material-symbols-rounded">analytics</span>
+                <span class="material-symbols-rounded">notifications_active</span>
             </div>
             <div>
-                <div class="brand-name">Dot.Analytics</div>
+                <div class="brand-name">Dot.Notify</div>
                 <div class="brand-status">
                     <div class="live-dot"></div>
-                    <span class="brand-subtitle">Intelligence Platform</span>
+                    <span class="brand-subtitle">Notification Hub</span>
                 </div>
             </div>
         </div>
@@ -121,7 +121,10 @@
 
     <header class="topbar">
         <div class="topbar-title">
-            @isset($header){{ $header }}@else Dot.Analytics
+            @isset($header)
+                {{ $header }}
+            @else
+                Dot.Notify
             @endisset
         </div>
         @auth
