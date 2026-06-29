@@ -1,6 +1,6 @@
-<div class="bg-white rounded-xl shadow p-6">
+<div class="dot-card" style="padding:1.5rem;">
     <div class="flex items-center justify-between mb-4">
-        <h3 class="text-lg font-semibold text-gray-800">AI Recommendations</h3>
+        <h3 style="font-family:'Syne',sans-serif;font-size:0.875rem;font-weight:700;color:#f4f4f5;">AI Recommendations</h3>
         <button
             wire:click="generate"
             class="text-xs px-3 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"

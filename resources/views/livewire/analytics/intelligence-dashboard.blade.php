@@ -1,6 +1,6 @@
-<div class="bg-white rounded-xl shadow p-6">
-    <h3 class="text-lg font-semibold text-gray-800 mb-4">Universal Intelligence Query</h3>
-    <p class="text-sm text-gray-500 mb-4">
+<div class="dot-card" style="padding:1.5rem;">
+    <h3 style="font-family:'Syne',sans-serif;font-size:0.875rem;font-weight:700;color:#f4f4f5;margin:0 0 1rem;">Universal Intelligence Query</h3>
+    <p style="font-size:0.8rem;color:#71717a;margin:0 0 1rem;">
         Ask any cross-platform question. Dot.Analytics traces relationships across all connected platforms to answer it.
     </p>
 
@@ -9,11 +9,11 @@
             type="text"
             wire:model="intelligenceQuery"
             placeholder="Why is productivity down this month?"
-            class="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            class="dot-input" style="flex:1;"
         />
         <button
             type="submit"
-            class="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+            class="dot-btn dot-btn-primary"
             wire:loading.attr="disabled"
         >
             <span wire:loading.remove>Ask</span>
@@ -26,7 +26,7 @@
     @enderror
 
     @if($queryAnswer)
-        <div class="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-gray-700 leading-relaxed">
+        <div class="dot-card" style="margin-top:1rem;padding:1rem;border-color:rgba(var(--accent-rgb),0.2);background:rgba(var(--accent-rgb),0.05);">
             {{ $queryAnswer }}
         </div>
     @endif

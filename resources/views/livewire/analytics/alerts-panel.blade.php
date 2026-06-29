@@ -1,14 +1,14 @@
-<div class="bg-white rounded-xl shadow p-6">
+<div class="dot-card" style="padding:1.5rem;">
     <div class="flex items-center justify-between mb-4">
-        <h3 class="text-lg font-semibold text-gray-800">Intelligence Alerts</h3>
+        <h3 style="font-family:'Syne',sans-serif;font-size:0.875rem;font-weight:700;color:#f4f4f5;">Intelligence Alerts</h3>
         <div class="flex gap-2">
-            <select wire:model.live="filterSeverity" class="border border-gray-300 rounded text-xs px-2 py-1">
+            <select wire:model.live="filterSeverity" class="dot-input" style="font-size:11px;padding:4px 8px;width:auto;">
                 <option value="">All severities</option>
                 <option value="critical">Critical</option>
                 <option value="warning">Warning</option>
                 <option value="info">Info</option>
             </select>
-            <select wire:model.live="filterStatus" class="border border-gray-300 rounded text-xs px-2 py-1">
+            <select wire:model.live="filterStatus" class="dot-input" style="font-size:11px;padding:4px 8px;width:auto;">
                 <option value="open">Open</option>
                 <option value="acknowledged">Acknowledged</option>
                 <option value="resolved">Resolved</option>

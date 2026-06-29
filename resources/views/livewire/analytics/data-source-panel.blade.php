@@ -1,6 +1,6 @@
-<div class="bg-white rounded-xl shadow p-6">
+<div class="dot-card" style="padding:1.5rem;">
     <div class="flex items-center justify-between mb-4">
-        <h3 class="text-lg font-semibold text-gray-800">Connected Platforms</h3>
+        <h3 style="font-family:'Syne',sans-serif;font-size:0.875rem;font-weight:700;color:#f4f4f5;">Connected Platforms</h3>
         <button wire:click="$toggle('showForm')" class="text-xs px-3 py-1.5 bg-gray-800 text-white rounded hover:bg-gray-700">
             {{ $showForm ? 'Cancel' : '+ Add Source' }}
         </button>
