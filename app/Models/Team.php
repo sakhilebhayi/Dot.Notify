@@ -62,4 +62,19 @@ class Team extends JetstreamTeam
     {
         return $this->hasMany(NotifyLog::class);
     }
+
+    public function notifyRules(): HasMany
+    {
+        return $this->hasMany(NotifyRule::class);
+    }
+
+    public function notifyWebhooks(): HasMany
+    {
+        return $this->hasMany(NotifyWebhook::class);
+    }
+
+    public function notifyInboundEvents(): HasMany
+    {
+        return $this->hasMany(NotifyInboundEvent::class);
+    }
 }

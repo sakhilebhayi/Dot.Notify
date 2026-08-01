@@ -1,6 +1,6 @@
 ---
 title: Dot.Notify — Platform Wiki
-version: 1.0.0
+version: 1.1.0
 status: active
 owners: [Notify Platform Lead]
 platform-id: dot-notify
@@ -21,7 +21,7 @@ Dot.Notify sends, tracks, and optimises notifications on behalf of the rest of t
 
 We are the shared last mile: almost nothing here originates as Dot.Notify's own idea — a platform tells us "this event happened," and we decide, per team-configured rule, who gets told, on what channel, with what copy. That position is also what makes our data unusually valuable: we are the only platform that sees attention economics across the *whole* ecosystem — what gets delivered, opened, acted on, or ignored, regardless of which platform triggered it.
 
-**Status:** shipping. This is a working Laravel application, not a blueprint — channels, templates, rules, delivery logs, batches, schedules, and inbound webhooks are all implemented and running behind team-scoped auth.
+**Status:** shipping. This is a working Laravel application, not a blueprint — channels, templates, rules, delivery logs, batches, and schedules are all implemented and running behind team-scoped auth. Inbound webhooks are the one exception by design: `POST /webhooks/{token}` is a real, receiving endpoint (see §2 and §3), but it deliberately sits outside session/Sanctum auth — external systems call it, they don't log in — and authenticates instead via a per-webhook token plus an HMAC-SHA256 request signature.
 
 ## 2. Architecture
 
@@ -40,9 +40,18 @@ We are the shared last mile: almost nothing here originates as Dot.Notify's own 
 
 **AI template drafting:** `App\Services\AiNotifyService::generateTemplate($purpose, $channelType)` calls the Anthropic Messages API directly (raw cURL, no SDK) with a fixed prompt asking for `{subject, body, variables}` JSON using `{{ variable }}` interpolation syntax. If no API key is configured it falls back to a deterministic templated stub rather than failing — AI assistance degrades gracefully to a usable default, it never blocks the send path.
 
+**Inbound webhooks:** `POST /webhooks/{token}` (`App\Http\Controllers\WebhookInboundController`, registered in `routes/web.php` outside the `auth:sanctum`/session group) is the real receiving endpoint for third-party events — closing the gap this wiki previously flagged as unbuilt. It is unauthenticated in the Jetstream sense on purpose: external systems (Stripe, GitHub, etc.) call it directly, so it authenticates via a two-part scheme instead:
+
+1. `{token}` (`NotifyWebhook::endpoint_token`) identifies *which* webhook.
+2. The `X-Dot-Signature` header must equal `hash_hmac('sha256', $rawRequestBody, $webhook->signing_secret)`, checked with `hash_equals()` — never `==` — against the header value.
+
+Both branches of failure — an unknown token, and a known token with a missing or wrong signature — return the exact same generic `401 {"message": "Unauthorized."}`. The controller always derives *a* secret (a deterministic fallback hash of the token when no real webhook is found) and always runs `hash_hmac` + `hash_equals`, so an unknown-token request and a bad-signature request cost roughly the same and are never distinguishable from the response. Nothing is persisted for a rejected request, so there's no admin-visible trace an attacker could use to tell "wrong signature" apart from "no such webhook." The route carries `throttle:30,1` since it's a public, unauthenticated-by-design surface.
+
+On a verified request, a `NotifyInboundEvent` row records the payload, `verified_at`, and a `status` (`received` → `routed` or `ignored`). If the webhook's `event_map` resolves the payload's event name to one of the team's `trigger_event`s and an active `NotifyRule` exists for it, the controller creates a `NotifyLog` (status `queued`) using that rule's `template_id`/`channel_id` — the same per-recipient audit record every other send path in this app produces — and links it back on the `NotifyInboundEvent`. It does not invent a parallel delivery mechanism, and it does not itself dispatch the queued log to a channel driver; that gap (nothing currently transitions a `NotifyLog` from `queued` to `sent`) pre-dates this pass and is called out in §6.
+
 ## 3. Domain Entities
 
-Derived from `database/migrations/2026_06_29_200001_create_notify_tables.php` and `app/Models/`:
+Derived from `database/migrations/2026_06_29_200001_create_notify_tables.php`, `2026_08_01_150001_add_signing_secret_to_notify_webhooks_table.php`, `2026_08_01_150002_create_notify_inbound_events_table.php`, and `app/Models/`:
 
 | Entity | Table | Key fields | Notes |
 |---|---|---|---|
@@ -53,7 +62,8 @@ Derived from `database/migrations/2026_06_29_200001_create_notify_tables.php` an
 | **NotifyPreference** | `notify_preferences` | `user_id`, `notification_type`, `channel_type`, `enabled` | Per-user opt-in/out, unique per (user, type, channel) |
 | **NotifyBatch** | `notify_batches` | `status`, `total_recipients`, `sent_count`, `failed_count` | Bulk sends with progress tracking |
 | **NotifySchedule** | `notify_schedules` | `cron_expression`, `timezone`, `next_run_at` | Recurring sends tied to a rule |
-| **NotifyWebhook** | `notify_webhooks` | `endpoint_token` (unique, auto-generated), `source`, `event_map` | Inbound webhook endpoints that translate a third-party event into one of our `trigger_event`s |
+| **NotifyWebhook** | `notify_webhooks` | `endpoint_token` (unique, auto-generated), `signing_secret` (auto-generated, hidden from serialization), `source`, `event_map` | Inbound webhook endpoints that translate a third-party event into one of our `trigger_event`s; `signing_secret` backs the HMAC scheme above |
+| **NotifyInboundEvent** | `notify_inbound_events` | `payload` (JSON), `source_event`, `trigger_event`, `verified_at`, `status` (`received`/`routed`/`ignored`), `notify_log_id` | One row per signature-verified inbound webhook request; only ever created after verification passes |
 
 Consent lives on `NotifyPreference`, scoped per user × notification type × channel — this is the enforcement point for anything opt-out-sensitive.
 
@@ -69,6 +79,8 @@ Delivery status transitions on `NotifyLog` are the primary signal we produce for
 | `failed` / `bounced` | Delivery did not complete | `failure_reason` populated |
 
 Dashboard aggregates (`routes/web.php`) read these directly: active channel count, notifications sent today, failures today, template count — all team-scoped. Livewire components react to a `notify.sent` browser event (see `NotificationCenter::refresh()`) to live-refresh the log view via Reverb.
+
+**Inbound side:** as of this pass, `NotifyInboundEvent` rows are a second, upstream signal — every verified third-party webhook request, whether or not it matched an active `NotifyRule` (`status`: `routed` vs `ignored`). An `ignored` event with a `source_event` that never maps in any `event_map` is a concrete, queryable signal of a webhook integration that's misconfigured or a third party sending events this team never wired up — useful input for a future `observation` Knowledge Pack (see §5), not yet built.
 
 ## 5. Connecting to Dot.Brain
 
@@ -87,6 +99,9 @@ We subscribe to Dot.Brain recommendations on class-throttling (demoting low-prec
 
 ## 6. Roadmap
 
+- [x] Build the inbound webhook HTTP endpoint — `POST /webhooks/{token}`, `App\Http\Controllers\WebhookInboundController`, token + HMAC-SHA256 signature verification, routes into `NotifyRule`/`NotifyLog` (see §2, §3). Previously `NotifyWebhook` only issued tokens with nothing receiving on them.
+- [ ] Dispatch queued `NotifyLog` rows (including the ones the webhook endpoint now creates) to an actual channel driver — no job currently transitions a log from `queued` to `sent`; this pre-dates the webhook endpoint and is a bigger gap than webhook receiving was
+- [ ] Implement `NotifySchedule` model — the migration table exists but nothing reads/writes it yet
 - [ ] Implement Knowledge Pack publishing (`observation`, `insight`, `outcome`, `incident`) — not yet wired up; this wiki and the Brain-side doc describe the target shape, not shipped behavior
 - [ ] Enforce "no absence-triggers" as a validation rule on `NotifyRule` creation, not just a documented convention
 - [ ] Per-class rate ceilings on `NotifyRule`/`NotifyBatch` to cap runaway send volume (the 2026-02 incident class of failure)
@@ -99,9 +114,11 @@ We subscribe to Dot.Brain recommendations on class-throttling (demoting low-prec
 |---|---|---|---|
 | 1.0.0 | 2026-08-01 | Notify Platform Lead | Initial wiki: derived from the actual Laravel codebase (models, migrations, services, routes), cross-referenced against Dot.Brain's platforms/dot-notify.md for ecosystem framing |
 | 1.0.1 | 2026-08-01 | Platform-loop pass | UI/UX: dashboard delivery-success-rate + recent-batches widgets, recipient/subject search on the delivery log, class-based dark mode toggle. Added an in-app notification bell (`database` channel) for this platform's own operators — `ChannelDegradedNotification` and `BatchFailedNotification` fire from `NotifyChannel`/`NotifyBatch` model observers on transition into a failed state. Wired the real logo/favicons across nav, auth pages, and browser tab; removed leftover shared-template assets (`index.html` marketing page, stray `dot.logos6.png`/`dot_projects.png`, wrong `package-lock.json` name). Added Feature tests. **Confirmed by code, not just gap analysis:** there is no inbound webhook HTTP route/controller at all — `NotifyWebhook` only issues tokens — and no `NotifySchedule` model despite the migration table existing; both are flagged in README Roadmap rather than built in this pass. |
+| 1.1.0 | 2026-08-01 | Platform-loop pass (incremental) | Built the inbound webhook endpoint flagged as missing in 1.0.1: `POST /webhooks/{token}` (`App\Http\Controllers\WebhookInboundController`), outside `auth:sanctum`/session auth, verified via a new `signing_secret` column on `notify_webhooks` and an `X-Dot-Signature: hash_hmac('sha256', $rawBody, $signing_secret)` header checked with `hash_equals()`. Unknown token and bad/missing signature return an identical generic 401 (no enumeration leak); route carries `throttle:30,1`. New `NotifyInboundEvent` model/migration records every verified request and routes it into the existing `NotifyRule` → `NotifyLog` pipeline (status `queued`) rather than a parallel one. Added `tests/Feature/Notify/WebhookInboundTest.php` (valid/invalid/missing signature, unknown-token parity, inactive webhook, rate limiting) — written and reviewed, not executed (no local PHP/Postgres; see Dot.Brain `os/02-Engineering-Loop.md` §2). |
 
 ## Open Questions
 
 - Should `NotifyRule` validation reject absence-triggering conditions at the database layer, or is that a policy check that belongs in a service class?
 - Per-class rate ceilings: fixed at channel/rule registration, or adaptive to observed precision from Brain recommendations?
 - SMS costs are per-message — should our channel-selection logic carry a cost term locally, or wait for Brain's cost-aware recommendation type?
+- The webhook endpoint now creates `queued` `NotifyLog` rows from inbound events, but nothing in this codebase dispatches a queued log to a channel driver yet (see Roadmap) — is that job the next bounded pass, given it's now reachable both from batches and from live third-party events?

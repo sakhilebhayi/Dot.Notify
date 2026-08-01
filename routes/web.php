@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\EcosystemAuthController;
+use App\Http\Controllers\WebhookInboundController;
 use App\Models\NotifyBatch;
 use App\Models\NotifyChannel;
 use App\Models\NotifyLog;
@@ -11,6 +12,15 @@ Route::get('/auth/ecosystem', [EcosystemAuthController::class, 'handle'])
     ->name('ecosystem.auth');
 
 Route::get('/', fn () => view('welcome'));
+
+// Inbound webhook receiver — deliberately outside the auth:sanctum/session
+// group below. Callers are external systems (Stripe, GitHub, etc.), not
+// logged-in users; they authenticate via the {token} + X-Dot-Signature
+// HMAC scheme inside WebhookInboundController, not Sanctum/session auth.
+// Rate-limited since it's unauthenticated-by-design and a target for abuse.
+Route::post('/webhooks/{token}', [WebhookInboundController::class, 'receive'])
+    ->middleware('throttle:30,1')
+    ->name('webhooks.receive');
 
 Route::middleware([
     'auth:sanctum',

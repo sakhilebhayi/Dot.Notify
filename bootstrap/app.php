@@ -13,7 +13,13 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // Inbound webhooks (routes/web.php: POST /webhooks/{token}) are
+        // called by external systems with no browser session and no CSRF
+        // token — they authenticate via the X-Dot-Signature HMAC scheme in
+        // WebhookInboundController instead. Exempt only this path.
+        $middleware->validateCsrfTokens(except: [
+            'webhooks/*',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
