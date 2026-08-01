@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use App\Notifications\ChannelDegradedNotification;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Notification;
 
 class NotifyChannel extends Model
 {
@@ -33,5 +35,22 @@ class NotifyChannel extends Model
     public function isHealthy(): bool
     {
         return $this->is_active && $this->test_status === 'ok';
+    }
+
+    /**
+     * Self-notification (platform-loop pass, 2026-08-01): tell every member
+     * of the owning team the moment a channel's test flips to "failed", so
+     * operators of this platform learn about their own delivery outages
+     * in-app instead of only discovering them via the dashboard's failure
+     * count. Fires on update only (not on the initial create) and only on
+     * the transition into "failed", so it doesn't re-notify on every save.
+     */
+    protected static function booted(): void
+    {
+        static::updated(function (self $channel) {
+            if ($channel->wasChanged('test_status') && $channel->test_status === 'failed' && $channel->team) {
+                Notification::send($channel->team->allUsers(), new ChannelDegradedNotification($channel));
+            }
+        });
     }
 }

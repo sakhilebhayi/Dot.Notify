@@ -98,6 +98,7 @@ We subscribe to Dot.Brain recommendations on class-throttling (demoting low-prec
 | Version | Date | Author | Change |
 |---|---|---|---|
 | 1.0.0 | 2026-08-01 | Notify Platform Lead | Initial wiki: derived from the actual Laravel codebase (models, migrations, services, routes), cross-referenced against Dot.Brain's platforms/dot-notify.md for ecosystem framing |
+| 1.0.1 | 2026-08-01 | Platform-loop pass | UI/UX: dashboard delivery-success-rate + recent-batches widgets, recipient/subject search on the delivery log, class-based dark mode toggle. Added an in-app notification bell (`database` channel) for this platform's own operators — `ChannelDegradedNotification` and `BatchFailedNotification` fire from `NotifyChannel`/`NotifyBatch` model observers on transition into a failed state. Wired the real logo/favicons across nav, auth pages, and browser tab; removed leftover shared-template assets (`index.html` marketing page, stray `dot.logos6.png`/`dot_projects.png`, wrong `package-lock.json` name). Added Feature tests. **Confirmed by code, not just gap analysis:** there is no inbound webhook HTTP route/controller at all — `NotifyWebhook` only issues tokens — and no `NotifySchedule` model despite the migration table existing; both are flagged in README Roadmap rather than built in this pass. |
 
 ## Open Questions
 

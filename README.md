@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/logo.svg" alt="Dot.Notify" width="320" />
+<img src="public/images/logo.png" alt="Dot.Notify" width="180" />
 
 <br /><br />
 
@@ -26,13 +26,13 @@ Dot.Notify is the notification management platform in the InfoDot ecosystem. Tea
 
 - Multi-channel delivery — email, SMS, push, webhook, Slack, and in-app
 - Template builder with {{ variable }} interpolation
-- AI template generation — describe the notification, get copy in seconds
-- Rule engine — map trigger events to channels and templates
-- Delivery log — full audit trail with status per recipient
+- AI template generation — describe the notification, get copy in seconds (falls back to a deterministic stub if no API key is configured)
+- Rule engine model (`NotifyRule`) mapping trigger events to a channel + template — no management UI yet, see Roadmap
+- Delivery log — full audit trail with status per recipient, searchable by recipient/subject and filterable by status
 - User preference management — opt-in/out per notification type
 - Bulk batch sends with delivery rate tracking
-- Scheduled and recurring notifications via cron expressions
-- Inbound webhook endpoints with auto-generated tokens
+- Auto-generated webhook endpoint tokens (`NotifyWebhook`) — the receiving HTTP endpoint itself is not implemented yet, see Roadmap
+- In-app self-notifications for this platform's own operators (channel degraded, batch failed)
 - Ecosystem SSO from InfoDot hub
 
 ## Domain Models
@@ -41,6 +41,18 @@ Dot.Notify is the notification management platform in the InfoDot ecosystem. Tea
 - **NotifyTemplate** — message template with variable support
 - **NotifyRule** — trigger-to-channel routing rule
 - **NotifyLog** — delivery audit record per recipient
+- **NotifyPreference** — per-user opt-in/out by notification type + channel
+- **NotifyBatch** — bulk send with progress/delivery-rate tracking
+- **NotifyWebhook** — inbound webhook endpoint registration (token generation only; no receiving route yet)
+
+> A `notify_schedules` table exists in the schema for recurring/cron-based sends, but there is no `NotifySchedule` model or UI built on it yet.
+
+## Roadmap / Known Gaps
+
+- Inbound webhook receiving endpoint (route + signature verification) — not implemented; `NotifyWebhook` currently only issues tokens
+- `NotifyRule` management UI (the model and relationships exist, no Livewire component yet)
+- `NotifySchedule` model + recurring-send execution (table exists, unused)
+- Knowledge Pack publishing to Dot.Brain (`observation`/`insight`/`outcome`/`incident`) — see `wiki.md` for the target shape
 
 ## Tech Stack
 
