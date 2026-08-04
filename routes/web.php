@@ -6,6 +6,7 @@ use App\Models\NotifyBatch;
 use App\Models\NotifyChannel;
 use App\Models\NotifyLog;
 use App\Models\NotifyTemplate;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/auth/ecosystem', [EcosystemAuthController::class, 'handle'])
@@ -28,6 +29,18 @@ Route::middleware([
     'verified',
 ])->group(function () {
     Route::get('/dashboard', function () {
+        // currentTeam is null for a user with no team (freshly registered
+        // and never created/joined one, or removed from their last team).
+        // HasTeamScope's global scope only filters by team_id when
+        // Auth::user()->currentTeam is present — with no current team it
+        // is a deliberate no-op (see HasTeamScope's docblock), so an
+        // unguarded render here wouldn't just be a null-deref, it would
+        // silently return every team's NotifyChannel/NotifyLog/
+        // NotifyTemplate/NotifyBatch rows. Guard before running any query.
+        if (! Auth::user()?->currentTeam) {
+            return redirect()->route('teams.create');
+        }
+
         // No explicit team_id filter needed: NotifyChannel/NotifyLog/
         // NotifyTemplate/NotifyBatch's HasTeamScope trait applies it
         // automatically to every query against these models.

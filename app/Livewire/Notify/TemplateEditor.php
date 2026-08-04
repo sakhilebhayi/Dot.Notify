@@ -3,7 +3,9 @@
 namespace App\Livewire\Notify;
 
 use App\Models\NotifyTemplate;
+use App\Models\Team;
 use App\Services\AiNotifyService;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
@@ -15,6 +17,17 @@ class TemplateEditor extends Component
     public string $channelType = 'email';
     public string $generatedBody = '';
     public string $generatedSubject = '';
+
+    /**
+     * currentTeam is null for a user with no team (e.g. a freshly
+     * registered user who hasn't created/joined one, or one removed from
+     * their last team) — see NotifyDashboardTest's no-team coverage and
+     * the platform-loop pass notes in wiki.md.
+     */
+    private function resolveCurrentTeam(): ?Team
+    {
+        return Auth::user()?->currentTeam;
+    }
 
     /**
      * No explicit team_id filter needed: NotifyTemplate's HasTeamScope
@@ -42,13 +55,23 @@ class TemplateEditor extends Component
 
     public function saveTemplate(): void
     {
+        // Wire:click-reachable action on an already-loaded page (embedded
+        // in the dashboard) — abort rather than redirect if the team
+        // disappeared after render, matching the ecosystem's
+        // "No active team selected." convention.
+        $team = $this->resolveCurrentTeam();
+
+        if (! $team) {
+            abort(403, 'No active team selected.');
+        }
+
         $this->validate([
             'templateName'  => 'required|string|max:100',
             'generatedBody' => 'required|string',
         ]);
 
         NotifyTemplate::create([
-            'team_id'      => auth()->user()->currentTeam->id,
+            'team_id'      => $team->id,
             'name'         => $this->templateName,
             'subject'      => $this->generatedSubject,
             'body'         => $this->generatedBody,

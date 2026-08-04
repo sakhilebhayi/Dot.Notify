@@ -91,4 +91,21 @@ class NotifyDashboardTest extends TestCase
             ->assertViewHas('activeChannels', 0)
             ->assertDontSee('Not Mine');
     }
+
+    /**
+     * Platform-loop pass (2026-08-04): a user with no current team (e.g.
+     * removed from their last team) must be redirected before any query
+     * runs. HasTeamScope's global scope is a deliberate no-op when
+     * currentTeam is null (see HasTeamScope's docblock) — without this
+     * guard, an unguarded render wouldn't just null-deref, it would
+     * silently return every team's rows.
+     */
+    public function test_authenticated_user_with_no_team_is_redirected_to_team_creation(): void
+    {
+        $user = User::factory()->create(['current_team_id' => null]);
+
+        $response = $this->actingAs($user)->get('/dashboard');
+
+        $response->assertRedirect(route('teams.create'));
+    }
 }
