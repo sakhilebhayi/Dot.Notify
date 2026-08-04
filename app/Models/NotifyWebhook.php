@@ -6,9 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
+use App\Models\Concerns\HasTeamScope;
 
 class NotifyWebhook extends Model
 {
+    use HasTeamScope;
+
     protected $table = 'notify_webhooks';
 
     protected $fillable = [

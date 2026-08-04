@@ -4,9 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Models\Concerns\HasTeamScope;
 
 class NotifyTemplate extends Model
 {
+    use HasTeamScope;
+
     protected $table = 'notify_templates';
 
     protected $fillable = [

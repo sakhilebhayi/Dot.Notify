@@ -6,9 +6,12 @@ use App\Notifications\ChannelDegradedNotification;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Notification;
+use App\Models\Concerns\HasTeamScope;
 
 class NotifyChannel extends Model
 {
+    use HasTeamScope;
+
     protected $table = 'notify_channels';
 
     protected $fillable = [

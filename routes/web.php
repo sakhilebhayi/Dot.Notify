@@ -28,25 +28,27 @@ Route::middleware([
     'verified',
 ])->group(function () {
     Route::get('/dashboard', function () {
-        $teamId = auth()->user()->currentTeam->id;
+        // No explicit team_id filter needed: NotifyChannel/NotifyLog/
+        // NotifyTemplate/NotifyBatch's HasTeamScope trait applies it
+        // automatically to every query against these models.
 
         // Delivery success rate: share of the last 30 days' logs that reached a
         // successful terminal state, among logs that reached any terminal state
         // (delivered/opened/clicked vs failed/bounced). Logs still queued/sent
         // are excluded since they haven't resolved yet.
-        $recentLogs   = NotifyLog::where('team_id', $teamId)->where('created_at', '>=', now()->subDays(30));
+        $recentLogs   = NotifyLog::where('created_at', '>=', now()->subDays(30));
         $succeeded    = (clone $recentLogs)->whereIn('status', ['delivered', 'opened', 'clicked'])->count();
         $failed       = (clone $recentLogs)->whereIn('status', ['failed', 'bounced'])->count();
         $resolved     = $succeeded + $failed;
 
         return view('dashboard', [
-            'activeChannels'      => NotifyChannel::where('team_id', $teamId)->where('is_active', true)->count(),
-            'totalChannels'       => NotifyChannel::where('team_id', $teamId)->count(),
-            'sentToday'           => NotifyLog::where('team_id', $teamId)->whereDate('sent_at', today())->whereIn('status', ['sent', 'delivered', 'opened'])->count(),
-            'failedToday'         => NotifyLog::where('team_id', $teamId)->whereDate('created_at', today())->where('status', 'failed')->count(),
-            'templateCount'       => NotifyTemplate::where('team_id', $teamId)->count(),
+            'activeChannels'      => NotifyChannel::where('is_active', true)->count(),
+            'totalChannels'       => NotifyChannel::count(),
+            'sentToday'           => NotifyLog::whereDate('sent_at', today())->whereIn('status', ['sent', 'delivered', 'opened'])->count(),
+            'failedToday'         => NotifyLog::whereDate('created_at', today())->where('status', 'failed')->count(),
+            'templateCount'       => NotifyTemplate::count(),
             'deliverySuccessRate' => $resolved > 0 ? round(($succeeded / $resolved) * 100, 1) : null,
-            'recentBatches'       => NotifyBatch::where('team_id', $teamId)->orderByDesc('created_at')->limit(5)->get(),
+            'recentBatches'       => NotifyBatch::orderByDesc('created_at')->limit(5)->get(),
         ]);
     })->name('dashboard');
 });

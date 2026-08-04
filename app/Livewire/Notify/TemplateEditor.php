@@ -16,12 +16,14 @@ class TemplateEditor extends Component
     public string $generatedBody = '';
     public string $generatedSubject = '';
 
+    /**
+     * No explicit team_id filter needed: NotifyTemplate's HasTeamScope
+     * trait applies it automatically to every query against this model.
+     */
     #[Computed]
     public function templates()
     {
-        return NotifyTemplate::where('team_id', auth()->user()->currentTeam->id)
-            ->orderByDesc('created_at')
-            ->get();
+        return NotifyTemplate::orderByDesc('created_at')->get();
     }
 
     public function generate(): void

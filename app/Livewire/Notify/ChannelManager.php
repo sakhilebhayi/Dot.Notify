@@ -12,12 +12,14 @@ class ChannelManager extends Component
     public string $type = 'email';
     public string $name = '';
 
+    /**
+     * No explicit team_id filter needed: NotifyChannel's HasTeamScope
+     * trait applies it automatically to every query against this model.
+     */
     #[Computed]
     public function channels()
     {
-        return NotifyChannel::where('team_id', auth()->user()->currentTeam->id)
-            ->orderBy('type')
-            ->get();
+        return NotifyChannel::orderBy('type')->get();
     }
 
     public function addChannel(): void
@@ -39,14 +41,14 @@ class ChannelManager extends Component
 
     public function toggleChannel(int $id): void
     {
-        $channel = NotifyChannel::where('team_id', auth()->user()->currentTeam->id)->findOrFail($id);
+        $channel = NotifyChannel::findOrFail($id);
         $channel->update(['is_active' => ! $channel->is_active]);
         unset($this->channels);
     }
 
     public function deleteChannel(int $id): void
     {
-        NotifyChannel::where('team_id', auth()->user()->currentTeam->id)->findOrFail($id)->delete();
+        NotifyChannel::findOrFail($id)->delete();
         unset($this->channels);
     }
 

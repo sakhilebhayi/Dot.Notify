@@ -12,10 +12,14 @@ class NotificationCenter extends Component
     public string $filterStatus = '';
     public string $search = '';
 
+    /**
+     * No explicit team_id filter needed: NotifyLog's HasTeamScope trait
+     * applies it automatically to every query against this model.
+     */
     #[Computed]
     public function logs()
     {
-        return NotifyLog::where('team_id', auth()->user()->currentTeam->id)
+        return NotifyLog::query()
             ->when($this->filterStatus, fn ($q) => $q->where('status', $this->filterStatus))
             ->when($this->search, fn ($q) => $q->where(function ($q) {
                 $q->where('recipient', 'like', "%{$this->search}%")
