@@ -38,8 +38,8 @@ class WebhookInboundController extends Controller
         // even for an unknown token, so an unknown-token request costs
         // roughly the same as a known-token-bad-signature request rather
         // than short-circuiting immediately on the DB miss.
-        $secret            = $webhook->signing_secret ?? hash('sha256', 'unknown-webhook-token:' . $token);
-        $rawBody            = $request->getContent();
+        $secret = $webhook->signing_secret ?? hash('sha256', 'unknown-webhook-token:'.$token);
+        $rawBody = $request->getContent();
         $providedSignature = (string) $request->header('X-Dot-Signature', '');
         $expectedSignature = hash_hmac('sha256', $rawBody, $secret);
 
@@ -55,25 +55,25 @@ class WebhookInboundController extends Controller
         $payload = json_decode($rawBody, true);
         $payload = is_array($payload) ? $payload : [];
 
-        $sourceEvent  = $payload['event'] ?? $payload['type'] ?? null;
+        $sourceEvent = $payload['event'] ?? $payload['type'] ?? null;
         $triggerEvent = $webhook->resolveTriggerEvent($sourceEvent);
 
         $webhook->forceFill(['last_received_at' => now()])->save();
 
         $inboundEvent = NotifyInboundEvent::create([
-            'team_id'           => $webhook->team_id,
+            'team_id' => $webhook->team_id,
             'notify_webhook_id' => $webhook->id,
-            'payload'           => $payload,
-            'source_event'      => $sourceEvent,
-            'trigger_event'     => $triggerEvent,
-            'verified_at'       => now(),
-            'status'            => 'received',
+            'payload' => $payload,
+            'source_event' => $sourceEvent,
+            'trigger_event' => $triggerEvent,
+            'verified_at' => now(),
+            'status' => 'received',
         ]);
 
         if ($triggerEvent === null) {
             $inboundEvent->update([
                 'status' => 'ignored',
-                'note'   => 'No event_map entry for source event "' . ($sourceEvent ?? 'null') . '".',
+                'note' => 'No event_map entry for source event "'.($sourceEvent ?? 'null').'".',
             ]);
 
             return response()->json(['status' => 'received'], 200);
@@ -94,27 +94,27 @@ class WebhookInboundController extends Controller
         if (! $rule) {
             $inboundEvent->update([
                 'status' => 'ignored',
-                'note'   => "No active NotifyRule for trigger_event \"{$triggerEvent}\".",
+                'note' => "No active NotifyRule for trigger_event \"{$triggerEvent}\".",
             ]);
 
             return response()->json(['status' => 'received'], 200);
         }
 
-        $template  = $rule->template;
+        $template = $rule->template;
         $recipient = $payload['recipient'] ?? $payload['email'] ?? "webhook:{$webhook->id}";
 
         $log = NotifyLog::create([
-            'team_id'      => $webhook->team_id,
-            'channel_id'   => $rule->channel_id,
-            'template_id'  => $rule->template_id,
-            'recipient'    => is_string($recipient) ? $recipient : "webhook:{$webhook->id}",
-            'subject'      => $template?->subject,
+            'team_id' => $webhook->team_id,
+            'channel_id' => $rule->channel_id,
+            'template_id' => $rule->template_id,
+            'recipient' => is_string($recipient) ? $recipient : "webhook:{$webhook->id}",
+            'subject' => $template?->subject,
             'body_preview' => $template ? $template->render(array_filter($payload, 'is_scalar')) : null,
-            'status'       => 'queued',
+            'status' => 'queued',
         ]);
 
         $inboundEvent->update([
-            'status'        => 'routed',
+            'status' => 'routed',
             'notify_log_id' => $log->id,
         ]);
 

@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasTeamScope;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use App\Models\Concerns\HasTeamScope;
 
 class NotifyRule extends Model
 {
@@ -23,7 +23,7 @@ class NotifyRule extends Model
 
     protected $casts = [
         'conditions' => 'array',
-        'is_active'  => 'boolean',
+        'is_active' => 'boolean',
     ];
 
     public function team(): BelongsTo

@@ -2,11 +2,11 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasTeamScope;
 use App\Notifications\ChannelDegradedNotification;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Notification;
-use App\Models\Concerns\HasTeamScope;
 
 class NotifyChannel extends Model
 {
@@ -25,8 +25,8 @@ class NotifyChannel extends Model
     ];
 
     protected $casts = [
-        'config'         => 'array',
-        'is_active'      => 'boolean',
+        'config' => 'array',
+        'is_active' => 'boolean',
         'last_tested_at' => 'datetime',
     ];
 

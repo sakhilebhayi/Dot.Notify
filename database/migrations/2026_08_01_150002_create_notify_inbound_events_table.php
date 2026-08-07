@@ -13,7 +13,8 @@ use Illuminate\Support\Facades\Schema;
  * exactly the enumeration leak App\Http\Controllers\WebhookInboundController
  * is written to avoid at the HTTP layer already.
  */
-return new class extends Migration {
+return new class extends Migration
+{
     public function up(): void
     {
         Schema::create('notify_inbound_events', function (Blueprint $table) {

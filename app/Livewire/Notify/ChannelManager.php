@@ -11,7 +11,9 @@ use Livewire\Component;
 class ChannelManager extends Component
 {
     public bool $showForm = false;
+
     public string $type = 'email';
+
     public string $name = '';
 
     /**
@@ -54,8 +56,8 @@ class ChannelManager extends Component
 
         NotifyChannel::create([
             'team_id' => $team->id,
-            'type'    => $this->type,
-            'name'    => $this->name,
+            'type' => $this->type,
+            'name' => $this->name,
         ]);
 
         $this->reset(['type', 'name', 'showForm']);

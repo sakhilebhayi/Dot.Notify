@@ -10,6 +10,7 @@ use Livewire\Component;
 class NotificationCenter extends Component
 {
     public string $filterStatus = '';
+
     public string $search = '';
 
     /**

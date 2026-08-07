@@ -20,6 +20,7 @@ class NotifyDashboardTest extends TestCase
     use RefreshDatabase;
 
     private User $user;
+
     private Team $team;
 
     protected function setUp(): void
@@ -66,11 +67,11 @@ class NotifyDashboardTest extends TestCase
     public function test_dashboard_lists_recent_batches(): void
     {
         NotifyBatch::create([
-            'team_id'          => $this->team->id,
-            'name'             => 'Spring Promo',
-            'status'           => 'completed',
+            'team_id' => $this->team->id,
+            'name' => 'Spring Promo',
+            'status' => 'completed',
             'total_recipients' => 50,
-            'sent_count'       => 48,
+            'sent_count' => 48,
         ]);
 
         $this->actingAs($this->user)

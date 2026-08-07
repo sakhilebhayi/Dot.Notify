@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasTeamScope;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use App\Models\Concerns\HasTeamScope;
 
 /**
  * A signature-verified request received at POST /webhooks/{token}. Only
@@ -31,7 +31,7 @@ class NotifyInboundEvent extends Model
     ];
 
     protected $casts = [
-        'payload'     => 'array',
+        'payload' => 'array',
         'verified_at' => 'datetime',
     ];
 

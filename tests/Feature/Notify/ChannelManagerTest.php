@@ -34,7 +34,7 @@ class ChannelManagerTest extends TestCase
 
         $this->assertDatabaseHas('notify_channels', [
             'team_id' => $user->currentTeam->id,
-            'name'    => 'Ops Alerts',
+            'name' => 'Ops Alerts',
         ]);
     }
 

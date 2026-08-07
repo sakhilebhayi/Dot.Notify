@@ -13,9 +13,7 @@ use Illuminate\Notifications\Notification;
  */
 class BatchFailedNotification extends Notification
 {
-    public function __construct(public NotifyBatch $batch)
-    {
-    }
+    public function __construct(public NotifyBatch $batch) {}
 
     /**
      * @return array<int, string>
@@ -31,11 +29,11 @@ class BatchFailedNotification extends Notification
     public function toDatabase(object $notifiable): array
     {
         return [
-            'type'     => 'batch_failed',
-            'title'    => 'Batch send failed',
-            'message'  => "\"{$this->batch->name}\" failed after sending {$this->batch->sent_count} of {$this->batch->total_recipients} recipients ({$this->batch->failed_count} failures).",
+            'type' => 'batch_failed',
+            'title' => 'Batch send failed',
+            'message' => "\"{$this->batch->name}\" failed after sending {$this->batch->sent_count} of {$this->batch->total_recipients} recipients ({$this->batch->failed_count} failures).",
             'batch_id' => $this->batch->id,
-            'url'      => route('dashboard'),
+            'url' => route('dashboard'),
         ];
     }
 }

@@ -35,7 +35,7 @@ class TemplateEditorTest extends TestCase
 
         $this->assertDatabaseHas('notify_templates', [
             'team_id' => $user->currentTeam->id,
-            'name'    => 'Welcome Email',
+            'name' => 'Welcome Email',
         ]);
     }
 

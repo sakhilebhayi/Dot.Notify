@@ -2,11 +2,11 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasTeamScope;
 use App\Notifications\BatchFailedNotification;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Notification;
-use App\Models\Concerns\HasTeamScope;
 
 class NotifyBatch extends Model
 {
@@ -29,7 +29,7 @@ class NotifyBatch extends Model
 
     protected $casts = [
         'scheduled_at' => 'datetime',
-        'started_at'   => 'datetime',
+        'started_at' => 'datetime',
         'completed_at' => 'datetime',
     ];
 

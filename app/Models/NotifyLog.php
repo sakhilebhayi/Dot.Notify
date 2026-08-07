@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasTeamScope;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use App\Models\Concerns\HasTeamScope;
 
 class NotifyLog extends Model
 {
@@ -27,9 +27,9 @@ class NotifyLog extends Model
     ];
 
     protected $casts = [
-        'sent_at'      => 'datetime',
+        'sent_at' => 'datetime',
         'delivered_at' => 'datetime',
-        'opened_at'    => 'datetime',
+        'opened_at' => 'datetime',
     ];
 
     public function team(): BelongsTo

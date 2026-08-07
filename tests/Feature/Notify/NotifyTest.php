@@ -17,6 +17,7 @@ class NotifyTest extends TestCase
     use RefreshDatabase;
 
     private User $user;
+
     private Team $team;
 
     protected function setUp(): void
@@ -45,8 +46,8 @@ class NotifyTest extends TestCase
     {
         $channel = NotifyChannel::create([
             'team_id' => $this->team->id,
-            'type'    => 'email',
-            'name'    => 'Primary Email',
+            'type' => 'email',
+            'name' => 'Primary Email',
         ]);
         $this->assertDatabaseHas('notify_channels', ['type' => 'email', 'name' => 'Primary Email']);
         $this->assertTrue($channel->team->is($this->team));
@@ -55,11 +56,11 @@ class NotifyTest extends TestCase
     public function test_channel_healthy_detection(): void
     {
         $channel = NotifyChannel::create([
-            'team_id'     => $this->team->id,
-            'type'        => 'email',
-            'name'        => 'Test',
+            'team_id' => $this->team->id,
+            'type' => 'email',
+            'name' => 'Test',
             'test_status' => 'ok',
-            'is_active'   => true,
+            'is_active' => true,
         ]);
         $this->assertTrue($channel->isHealthy());
     }
@@ -67,9 +68,9 @@ class NotifyTest extends TestCase
     public function test_channel_unhealthy_when_inactive(): void
     {
         $channel = NotifyChannel::create([
-            'team_id'   => $this->team->id,
-            'type'      => 'email',
-            'name'      => 'Test',
+            'team_id' => $this->team->id,
+            'type' => 'email',
+            'name' => 'Test',
             'is_active' => false,
         ]);
         $this->assertFalse($channel->isHealthy());
@@ -78,9 +79,9 @@ class NotifyTest extends TestCase
     public function test_notify_template_can_be_created(): void
     {
         NotifyTemplate::create([
-            'team_id'      => $this->team->id,
-            'name'         => 'Welcome Email',
-            'body'         => 'Hi {{ name }}, welcome to InfoDot!',
+            'team_id' => $this->team->id,
+            'name' => 'Welcome Email',
+            'body' => 'Hi {{ name }}, welcome to InfoDot!',
             'channel_type' => 'email',
         ]);
         $this->assertDatabaseHas('notify_templates', ['name' => 'Welcome Email']);
@@ -89,9 +90,9 @@ class NotifyTest extends TestCase
     public function test_template_renders_variables(): void
     {
         $tpl = NotifyTemplate::create([
-            'team_id'      => $this->team->id,
-            'name'         => 'Test',
-            'body'         => 'Hello {{ name }}!',
+            'team_id' => $this->team->id,
+            'name' => 'Test',
+            'body' => 'Hello {{ name }}!',
             'channel_type' => 'email',
         ]);
         $this->assertEquals('Hello Sakhile!', $tpl->render(['name' => 'Sakhile']));
@@ -100,10 +101,10 @@ class NotifyTest extends TestCase
     public function test_notify_log_delivery_detection(): void
     {
         $log = NotifyLog::create([
-            'team_id'   => $this->team->id,
+            'team_id' => $this->team->id,
             'recipient' => 'user@example.com',
-            'status'    => 'delivered',
-            'sent_at'   => now(),
+            'status' => 'delivered',
+            'sent_at' => now(),
         ]);
         $this->assertTrue($log->wasDelivered());
         $this->assertFalse($log->hasFailed());
@@ -112,9 +113,9 @@ class NotifyTest extends TestCase
     public function test_failed_log_detection(): void
     {
         $log = NotifyLog::create([
-            'team_id'        => $this->team->id,
-            'recipient'      => 'user@example.com',
-            'status'         => 'failed',
+            'team_id' => $this->team->id,
+            'recipient' => 'user@example.com',
+            'status' => 'failed',
             'failure_reason' => 'Invalid email',
         ]);
         $this->assertTrue($log->hasFailed());
@@ -123,11 +124,11 @@ class NotifyTest extends TestCase
     public function test_notify_batch_delivery_rate(): void
     {
         $batch = NotifyBatch::create([
-            'team_id'          => $this->team->id,
-            'name'             => 'Campaign 1',
-            'status'           => 'completed',
+            'team_id' => $this->team->id,
+            'name' => 'Campaign 1',
+            'status' => 'completed',
             'total_recipients' => 100,
-            'sent_count'       => 85,
+            'sent_count' => 85,
         ]);
         $this->assertEquals(85.0, $batch->deliveryRate());
     }
@@ -136,8 +137,8 @@ class NotifyTest extends TestCase
     {
         $webhook = NotifyWebhook::create([
             'team_id' => $this->team->id,
-            'name'    => 'Stripe Events',
-            'source'  => 'Stripe',
+            'name' => 'Stripe Events',
+            'source' => 'Stripe',
         ]);
         $this->assertNotEmpty($webhook->endpoint_token);
         $this->assertEquals(48, strlen($webhook->endpoint_token));

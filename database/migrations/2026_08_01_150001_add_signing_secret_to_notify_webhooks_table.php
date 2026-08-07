@@ -14,7 +14,8 @@ use Illuminate\Support\Facades\Schema;
  * proves the caller actually holds the secret and the body wasn't tampered
  * with in transit.
  */
-return new class extends Migration {
+return new class extends Migration
+{
     public function up(): void
     {
         Schema::table('notify_webhooks', function (Blueprint $table) {

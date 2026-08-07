@@ -13,9 +13,7 @@ use Illuminate\Notifications\Notification;
  */
 class ChannelDegradedNotification extends Notification
 {
-    public function __construct(public NotifyChannel $channel)
-    {
-    }
+    public function __construct(public NotifyChannel $channel) {}
 
     /**
      * @return array<int, string>
@@ -31,11 +29,11 @@ class ChannelDegradedNotification extends Notification
     public function toDatabase(object $notifiable): array
     {
         return [
-            'type'       => 'channel_degraded',
-            'title'      => 'Channel degraded',
-            'message'    => "\"{$this->channel->name}\" ({$this->channel->type}) failed its last delivery test.",
+            'type' => 'channel_degraded',
+            'title' => 'Channel degraded',
+            'message' => "\"{$this->channel->name}\" ({$this->channel->type}) failed its last delivery test.",
             'channel_id' => $this->channel->id,
-            'url'        => route('dashboard'),
+            'url' => route('dashboard'),
         ];
     }
 }

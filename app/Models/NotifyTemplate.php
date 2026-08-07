@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasTeamScope;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use App\Models\Concerns\HasTeamScope;
 
 class NotifyTemplate extends Model
 {
@@ -37,8 +37,9 @@ class NotifyTemplate extends Model
     {
         $body = $this->body;
         foreach ($vars as $key => $value) {
-            $body = str_replace('{{ ' . $key . ' }}', $value, $body);
+            $body = str_replace('{{ '.$key.' }}', $value, $body);
         }
+
         return $body;
     }
 }

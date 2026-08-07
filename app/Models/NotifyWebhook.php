@@ -2,11 +2,11 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasTeamScope;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
-use App\Models\Concerns\HasTeamScope;
 
 class NotifyWebhook extends Model
 {
@@ -30,8 +30,8 @@ class NotifyWebhook extends Model
     ];
 
     protected $casts = [
-        'event_map'        => 'array',
-        'is_active'        => 'boolean',
+        'event_map' => 'array',
+        'is_active' => 'boolean',
         'last_received_at' => 'datetime',
     ];
 

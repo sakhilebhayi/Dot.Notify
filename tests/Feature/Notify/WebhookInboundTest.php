@@ -4,7 +4,6 @@ namespace Tests\Feature\Notify;
 
 use App\Models\NotifyChannel;
 use App\Models\NotifyInboundEvent;
-use App\Models\NotifyLog;
 use App\Models\NotifyRule;
 use App\Models\NotifyTemplate;
 use App\Models\NotifyWebhook;
@@ -24,19 +23,20 @@ class WebhookInboundTest extends TestCase
     use RefreshDatabase;
 
     private Team $team;
+
     private NotifyWebhook $webhook;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $user       = User::factory()->withPersonalTeam()->create();
+        $user = User::factory()->withPersonalTeam()->create();
         $this->team = $user->currentTeam;
 
         $this->webhook = NotifyWebhook::create([
             'team_id' => $this->team->id,
-            'name'    => 'Stripe Events',
-            'source'  => 'Stripe',
+            'name' => 'Stripe Events',
+            'source' => 'Stripe',
             'event_map' => [
                 'payment.failed' => 'payment.failed',
             ],
@@ -45,8 +45,8 @@ class WebhookInboundTest extends TestCase
 
     private function sign(array $payload, ?string $secret = null): array
     {
-        $body      = json_encode($payload);
-        $secret    = $secret ?? $this->webhook->signing_secret;
+        $body = json_encode($payload);
+        $secret = $secret ?? $this->webhook->signing_secret;
         $signature = hash_hmac('sha256', $body, $secret);
 
         return [$body, $signature];
@@ -67,7 +67,7 @@ class WebhookInboundTest extends TestCase
 
         $this->assertDatabaseHas('notify_inbound_events', [
             'notify_webhook_id' => $this->webhook->id,
-            'source_event'      => 'payment.failed',
+            'source_event' => 'payment.failed',
         ]);
 
         $event = NotifyInboundEvent::first();
@@ -79,19 +79,19 @@ class WebhookInboundTest extends TestCase
 
     public function test_valid_signature_with_matching_rule_creates_notify_log(): void
     {
-        $channel  = NotifyChannel::create(['team_id' => $this->team->id, 'type' => 'email', 'name' => 'Ops Email']);
+        $channel = NotifyChannel::create(['team_id' => $this->team->id, 'type' => 'email', 'name' => 'Ops Email']);
         $template = NotifyTemplate::create([
-            'team_id'      => $this->team->id,
-            'name'         => 'Payment Failed',
-            'body'         => 'Payment failed for {{ recipient }}',
+            'team_id' => $this->team->id,
+            'name' => 'Payment Failed',
+            'body' => 'Payment failed for {{ recipient }}',
             'channel_type' => 'email',
         ]);
         NotifyRule::create([
-            'team_id'       => $this->team->id,
-            'template_id'   => $template->id,
-            'channel_id'    => $channel->id,
+            'team_id' => $this->team->id,
+            'template_id' => $template->id,
+            'channel_id' => $channel->id,
             'trigger_event' => 'payment.failed',
-            'is_active'     => true,
+            'is_active' => true,
         ]);
 
         $payload = ['event' => 'payment.failed', 'recipient' => 'ops@example.com'];
@@ -104,9 +104,9 @@ class WebhookInboundTest extends TestCase
         )->assertStatus(200);
 
         $this->assertDatabaseHas('notify_logs', [
-            'team_id'   => $this->team->id,
+            'team_id' => $this->team->id,
             'recipient' => 'ops@example.com',
-            'status'    => 'queued',
+            'status' => 'queued',
         ]);
 
         $event = NotifyInboundEvent::first();
@@ -122,7 +122,7 @@ class WebhookInboundTest extends TestCase
         $response = $this->postJson(
             "/webhooks/{$this->webhook->endpoint_token}",
             $payload,
-            ['X-Dot-Signature' => 'deadbeef' . hash_hmac('sha256', $body, 'wrong-secret')]
+            ['X-Dot-Signature' => 'deadbeef'.hash_hmac('sha256', $body, 'wrong-secret')]
         );
 
         $response->assertStatus(401);

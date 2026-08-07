@@ -12,10 +12,15 @@ use Livewire\Component;
 class TemplateEditor extends Component
 {
     public bool $showForm = false;
+
     public string $templateName = '';
+
     public string $purpose = '';
+
     public string $channelType = 'email';
+
     public string $generatedBody = '';
+
     public string $generatedSubject = '';
 
     /**
@@ -42,15 +47,15 @@ class TemplateEditor extends Component
     public function generate(): void
     {
         $this->validate([
-            'purpose'     => 'required|string|max:200',
+            'purpose' => 'required|string|max:200',
             'channelType' => 'required|string',
         ]);
 
-        $service = new AiNotifyService();
-        $result  = $service->generateTemplate($this->purpose, $this->channelType);
+        $service = new AiNotifyService;
+        $result = $service->generateTemplate($this->purpose, $this->channelType);
 
         $this->generatedSubject = $result['subject'] ?? '';
-        $this->generatedBody    = $result['body'] ?? '';
+        $this->generatedBody = $result['body'] ?? '';
     }
 
     public function saveTemplate(): void
@@ -66,15 +71,15 @@ class TemplateEditor extends Component
         }
 
         $this->validate([
-            'templateName'  => 'required|string|max:100',
+            'templateName' => 'required|string|max:100',
             'generatedBody' => 'required|string',
         ]);
 
         NotifyTemplate::create([
-            'team_id'      => $team->id,
-            'name'         => $this->templateName,
-            'subject'      => $this->generatedSubject,
-            'body'         => $this->generatedBody,
+            'team_id' => $team->id,
+            'name' => $this->templateName,
+            'subject' => $this->generatedSubject,
+            'body' => $this->generatedBody,
             'channel_type' => $this->channelType,
         ]);
 

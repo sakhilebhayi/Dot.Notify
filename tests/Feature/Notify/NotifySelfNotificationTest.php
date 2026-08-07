@@ -24,6 +24,7 @@ class NotifySelfNotificationTest extends TestCase
     use RefreshDatabase;
 
     private User $user;
+
     private Team $team;
 
     protected function setUp(): void
@@ -36,9 +37,9 @@ class NotifySelfNotificationTest extends TestCase
     public function test_channel_failing_its_test_notifies_the_team(): void
     {
         $channel = NotifyChannel::create([
-            'team_id'     => $this->team->id,
-            'type'        => 'email',
-            'name'        => 'Primary Email',
+            'team_id' => $this->team->id,
+            'type' => 'email',
+            'name' => 'Primary Email',
             'test_status' => 'ok',
         ]);
 
@@ -53,9 +54,9 @@ class NotifySelfNotificationTest extends TestCase
         // Observer only fires on the transition (update), not on create,
         // so seeding a channel that starts out failed shouldn't notify.
         NotifyChannel::create([
-            'team_id'     => $this->team->id,
-            'type'        => 'email',
-            'name'        => 'Broken From Day One',
+            'team_id' => $this->team->id,
+            'type' => 'email',
+            'name' => 'Broken From Day One',
             'test_status' => 'failed',
         ]);
 
@@ -65,9 +66,9 @@ class NotifySelfNotificationTest extends TestCase
     public function test_channel_staying_ok_does_not_notify(): void
     {
         $channel = NotifyChannel::create([
-            'team_id'     => $this->team->id,
-            'type'        => 'email',
-            'name'        => 'Healthy',
+            'team_id' => $this->team->id,
+            'type' => 'email',
+            'name' => 'Healthy',
             'test_status' => 'ok',
         ]);
 
@@ -79,12 +80,12 @@ class NotifySelfNotificationTest extends TestCase
     public function test_batch_failing_notifies_the_team(): void
     {
         $batch = NotifyBatch::create([
-            'team_id'          => $this->team->id,
-            'name'             => 'Campaign X',
-            'status'           => 'sending',
+            'team_id' => $this->team->id,
+            'name' => 'Campaign X',
+            'status' => 'sending',
             'total_recipients' => 100,
-            'sent_count'       => 40,
-            'failed_count'     => 5,
+            'sent_count' => 40,
+            'failed_count' => 5,
         ]);
 
         $batch->update(['status' => 'failed']);
@@ -96,9 +97,9 @@ class NotifySelfNotificationTest extends TestCase
     public function test_notification_bell_reflects_unread_count_and_marks_read(): void
     {
         $channel = NotifyChannel::create([
-            'team_id'     => $this->team->id,
-            'type'        => 'sms',
-            'name'        => 'SMS Gateway',
+            'team_id' => $this->team->id,
+            'type' => 'sms',
+            'name' => 'SMS Gateway',
             'test_status' => 'ok',
         ]);
         $channel->update(['test_status' => 'failed']);

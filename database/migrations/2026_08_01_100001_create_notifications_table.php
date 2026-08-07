@@ -12,7 +12,8 @@ use Illuminate\Support\Facades\Schema;
  * and App\Notifications\BatchFailedNotification, dispatched from model
  * observers on NotifyChannel and NotifyBatch.
  */
-return new class extends Migration {
+return new class extends Migration
+{
     public function up(): void
     {
         Schema::create('notifications', function (Blueprint $table) {
