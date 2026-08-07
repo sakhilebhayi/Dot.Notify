@@ -123,7 +123,11 @@
 
         <!-- Hero -->
         <section class="relative min-h-[100dvh] flex items-end overflow-hidden">
-            <div class="absolute inset-0" style="background: radial-gradient(ellipse 80% 60% at 15% 0%, rgba(139,195,74,0.10) 0%, transparent 60%), var(--ink);"></div>
+            <!-- Photo: close-up of a cell phone with a message on it, by Jonas Leupe,
+            unsplash.com/photos/a-close-up-of-a-cell-phone-with-a-message-on-it-gpupazK2Ins -->
+            <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1639592660386-d8c1d801e616?q=80&w=2400&auto=format&fit=crop');"></div>
+            <div class="absolute inset-0" style="background: linear-gradient(100deg, var(--ink) 0%, var(--ink) 32%, rgba(18,25,15,0.6) 55%, rgba(18,25,15,0.35) 75%, rgba(18,25,15,0.18) 100%);"></div>
+            <div class="absolute inset-0" style="background: radial-gradient(ellipse 80% 60% at 15% 0%, rgba(139,195,74,0.10) 0%, transparent 60%);"></div>
 
             <!-- Signature element: line-art bell + ring/ping arcs — echoes the logo's own bell icon and the "signal" every notification is -->
             <svg class="hidden lg:block absolute right-[5%] bottom-[8%] h-[65%] w-auto opacity-[0.16] pointer-events-none" viewBox="0 0 240 300" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
