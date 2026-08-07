@@ -286,6 +286,11 @@
                 <a href="/" class="flex items-center gap-2.5">
                     <img src="{{ asset('images/logo.png') }}" alt="Dot.Notify" class="h-11 w-auto opacity-90">
                 </a>
+                <div class="flex items-center gap-6 font-mono text-xs tracking-wide uppercase text-[var(--mist)]">
+                    <a href="{{ route('policy.show') }}" class="hover:text-[var(--paper)] transition-colors">Privacy</a>
+                    <a href="{{ route('cookies') }}" class="hover:text-[var(--paper)] transition-colors">Cookies</a>
+                    <a href="{{ route('terms.show') }}" class="hover:text-[var(--paper)] transition-colors">Terms</a>
+                </div>
                 <p class="font-mono text-xs tracking-wide text-[var(--mist)]">
                     &copy; {{ date('Y') }} Dot.Notify. The shared last mile of the Dot Ecosystem.
                 </p>
