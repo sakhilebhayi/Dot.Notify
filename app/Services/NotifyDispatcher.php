@@ -7,6 +7,7 @@ use App\Models\NotifyLog;
 use App\Models\User;
 use App\Notifications\QueuedNotificationDelivered;
 use Illuminate\Mail\Message;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Throwable;
 
@@ -34,6 +35,8 @@ class NotifyDispatcher
         match ($channel->type) {
             'email' => $this->dispatchEmail($log),
             'in_app' => $this->dispatchInApp($log, $channel),
+            'webhook' => $this->dispatchWebhook($log, $channel),
+            'slack' => $this->dispatchSlack($log, $channel),
             'sms' => $this->fail($log, 'SMS delivery has no configured provider.'),
             'push' => $this->fail($log, 'Push delivery has no configured provider.'),
             default => $this->fail($log, 'Unknown channel type.'),
@@ -54,6 +57,58 @@ class NotifyDispatcher
         $user->notify(new QueuedNotificationDelivered($log));
 
         $this->succeed($log);
+    }
+
+    private function dispatchWebhook(NotifyLog $log, NotifyChannel $channel): void
+    {
+        $url = $channel->config['url'] ?? null;
+
+        if (! $url) {
+            $this->fail($log, 'Webhook channel has no configured URL.');
+
+            return;
+        }
+
+        try {
+            $response = Http::post($url, [
+                'recipient' => $log->recipient,
+                'subject' => $log->subject,
+                'body' => $log->body_preview,
+            ]);
+
+            if ($response->successful()) {
+                $this->succeed($log);
+            } else {
+                $this->fail($log, "Webhook returned HTTP {$response->status()}.");
+            }
+        } catch (Throwable $e) {
+            $this->fail($log, $e->getMessage());
+        }
+    }
+
+    private function dispatchSlack(NotifyLog $log, NotifyChannel $channel): void
+    {
+        $url = $channel->config['webhook_url'] ?? null;
+
+        if (! $url) {
+            $this->fail($log, 'Slack channel has no configured webhook URL.');
+
+            return;
+        }
+
+        $text = $log->subject ? "{$log->subject}: {$log->body_preview}" : ($log->body_preview ?? '');
+
+        try {
+            $response = Http::post($url, ['text' => $text]);
+
+            if ($response->successful()) {
+                $this->succeed($log);
+            } else {
+                $this->fail($log, "Slack webhook returned HTTP {$response->status()}.");
+            }
+        } catch (Throwable $e) {
+            $this->fail($log, $e->getMessage());
+        }
     }
 
     private function dispatchEmail(NotifyLog $log): void
