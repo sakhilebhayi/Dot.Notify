@@ -2,7 +2,10 @@
 
 namespace App\Services;
 
+use App\Models\NotifyChannel;
 use App\Models\NotifyLog;
+use App\Models\User;
+use App\Notifications\QueuedNotificationDelivered;
 use Illuminate\Mail\Message;
 use Illuminate\Support\Facades\Mail;
 use Throwable;
@@ -30,10 +33,27 @@ class NotifyDispatcher
 
         match ($channel->type) {
             'email' => $this->dispatchEmail($log),
+            'in_app' => $this->dispatchInApp($log, $channel),
             'sms' => $this->fail($log, 'SMS delivery has no configured provider.'),
             'push' => $this->fail($log, 'Push delivery has no configured provider.'),
             default => $this->fail($log, 'Unknown channel type.'),
         };
+    }
+
+    private function dispatchInApp(NotifyLog $log, NotifyChannel $channel): void
+    {
+        $team = $channel->team;
+        $user = $team ? User::where('email', $log->recipient)->first() : null;
+
+        if (! $user || ! $user->belongsToTeam($team)) {
+            $this->fail($log, 'No matching user found for in-app delivery.');
+
+            return;
+        }
+
+        $user->notify(new QueuedNotificationDelivered($log));
+
+        $this->succeed($log);
     }
 
     private function dispatchEmail(NotifyLog $log): void
