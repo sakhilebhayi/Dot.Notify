@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\EcosystemAuthController;
+use App\Http\Controllers\RealtimeHealthController;
 use App\Http\Controllers\WebhookInboundController;
 use App\Models\NotifyBatch;
 use App\Models\NotifyChannel;
@@ -34,6 +35,11 @@ Route::get('/cookies', function () {
 Route::post('/webhooks/{token}', [WebhookInboundController::class, 'receive'])
     ->middleware('throttle:30,1')
     ->name('webhooks.receive');
+
+// Real-time infrastructure health check -- unauthenticated like Laravel's
+// own /up, for uptime monitors/load balancers.
+Route::get('/up/realtime', [RealtimeHealthController::class, 'check'])
+    ->name('health.realtime');
 
 Route::middleware([
     'auth:sanctum',
