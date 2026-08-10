@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Models\NotifyBatch;
+use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Notification;
 
 /**
@@ -10,6 +11,10 @@ use Illuminate\Notifications\Notification;
  * the moment one of that team's bulk sends flips to status "failed" —
  * dispatched from NotifyBatch::booted() so operators find out a batch
  * send died without having to watch the Batches list.
+ *
+ * Also broadcasts over Reverb so NotificationBell.php updates live instead
+ * of only on page load -- see routes/channels.php /
+ * BroadcastServiceProvider for the App.Models.User.{id} channel this uses.
  */
 class BatchFailedNotification extends Notification
 {
@@ -20,7 +25,12 @@ class BatchFailedNotification extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['database'];
+        return ['database', 'broadcast'];
+    }
+
+    public function toBroadcast(object $notifiable): BroadcastMessage
+    {
+        return new BroadcastMessage($this->toDatabase($notifiable));
     }
 
     /**
