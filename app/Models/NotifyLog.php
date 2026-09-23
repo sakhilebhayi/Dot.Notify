@@ -16,6 +16,7 @@ class NotifyLog extends Model
         'team_id',
         'channel_id',
         'template_id',
+        'rule_id',
         'recipient',
         'subject',
         'body_preview',
@@ -40,6 +41,11 @@ class NotifyLog extends Model
     public function channel(): BelongsTo
     {
         return $this->belongsTo(NotifyChannel::class);
+    }
+
+    public function rule(): BelongsTo
+    {
+        return $this->belongsTo(NotifyRule::class, 'rule_id');
     }
 
     public function wasDelivered(): bool

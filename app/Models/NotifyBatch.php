@@ -38,6 +38,17 @@ class NotifyBatch extends Model
         return $this->belongsTo(Team::class);
     }
 
+    /**
+     * template_id has been a real foreign key on notify_batches since the
+     * first migration, but nothing ever declared the relationship —
+     * needed by PublishDkpIncidentPack to reach the batch's channel_type
+     * for a failed batch's incident_report body.
+     */
+    public function template(): BelongsTo
+    {
+        return $this->belongsTo(NotifyTemplate::class, 'template_id');
+    }
+
     public function deliveryRate(): float
     {
         return $this->total_recipients > 0

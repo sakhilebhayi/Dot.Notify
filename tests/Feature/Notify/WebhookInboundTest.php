@@ -4,6 +4,7 @@ namespace Tests\Feature\Notify;
 
 use App\Models\NotifyChannel;
 use App\Models\NotifyInboundEvent;
+use App\Models\NotifyLog;
 use App\Models\NotifyRule;
 use App\Models\NotifyTemplate;
 use App\Models\NotifyWebhook;
@@ -112,6 +113,56 @@ class WebhookInboundTest extends TestCase
         $event = NotifyInboundEvent::first();
         $this->assertEquals('routed', $event->status);
         $this->assertNotNull($event->notify_log_id);
+        $this->assertSame(
+            NotifyRule::where('trigger_event', 'payment.failed')->value('id'),
+            NotifyLog::first()->rule_id,
+        );
+    }
+
+    public function test_rate_ceiling_stops_further_notify_logs_once_exceeded(): void
+    {
+        $channel = NotifyChannel::create(['team_id' => $this->team->id, 'type' => 'email', 'name' => 'Ops Email']);
+        $template = NotifyTemplate::create([
+            'team_id' => $this->team->id,
+            'name' => 'Payment Failed',
+            'body' => 'Payment failed for {{ recipient }}',
+            'channel_type' => 'email',
+        ]);
+        NotifyRule::create([
+            'team_id' => $this->team->id,
+            'template_id' => $template->id,
+            'channel_id' => $channel->id,
+            'trigger_event' => 'payment.failed',
+            'rate_ceiling_per_hour' => 2,
+            'is_active' => true,
+        ]);
+
+        $payload = ['event' => 'payment.failed', 'recipient' => 'ops@example.com'];
+        [, $signature] = $this->sign($payload);
+
+        // First two requests are under the ceiling and route normally.
+        for ($i = 0; $i < 2; $i++) {
+            $this->postJson(
+                "/webhooks/{$this->webhook->endpoint_token}",
+                $payload,
+                ['X-Dot-Signature' => $signature]
+            )->assertStatus(200);
+        }
+
+        $this->assertSame(2, NotifyLog::where('team_id', $this->team->id)->count());
+
+        // The third crosses the ceiling: recorded and verified, but not routed.
+        $this->postJson(
+            "/webhooks/{$this->webhook->endpoint_token}",
+            $payload,
+            ['X-Dot-Signature' => $signature]
+        )->assertStatus(200);
+
+        $this->assertSame(2, NotifyLog::where('team_id', $this->team->id)->count(), 'A third notification should be blocked by the rate ceiling.');
+
+        $thirdEvent = NotifyInboundEvent::orderByDesc('id')->first();
+        $this->assertSame('ignored', $thirdEvent->status);
+        $this->assertStringContainsString('Rate ceiling', $thirdEvent->note);
     }
 
     public function test_invalid_signature_is_rejected_with_generic_401(): void

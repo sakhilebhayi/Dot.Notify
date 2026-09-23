@@ -70,6 +70,11 @@
         <livewire:notify.template-editor />
     </div>
 
+    {{-- Routing Rules --}}
+    <div style="margin-top:1.25rem;">
+        <livewire:notify.rule-manager />
+    </div>
+
 </div>
 
 </x-app-layout>

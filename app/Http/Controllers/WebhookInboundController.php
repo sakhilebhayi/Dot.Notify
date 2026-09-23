@@ -100,6 +100,23 @@ class WebhookInboundController extends Controller
             return response()->json(['status' => 'received'], 200);
         }
 
+        // Governance hardening (wiki.md §6, citing the real 2026-02
+        // incident: a misconfigured threshold sent 40x normal volume in
+        // one day). Opt-in per rule via rate_ceiling_per_hour -- a rule
+        // with no ceiling set behaves exactly as before this check
+        // existed. This is the one real call site where an external
+        // system can trigger unbounded NotifyLog creation from a single
+        // NotifyRule; NotifySchedule's recipients list is inherently
+        // bounded, so it doesn't need the same guard.
+        if ($rule->isOverRateCeiling()) {
+            $inboundEvent->update([
+                'status' => 'ignored',
+                'note' => "Rate ceiling ({$rule->rate_ceiling_per_hour}/hour) exceeded for trigger_event \"{$triggerEvent}\".",
+            ]);
+
+            return response()->json(['status' => 'received'], 200);
+        }
+
         $template = $rule->template;
         $recipient = $payload['recipient'] ?? $payload['email'] ?? "webhook:{$webhook->id}";
 
@@ -107,6 +124,7 @@ class WebhookInboundController extends Controller
             'team_id' => $webhook->team_id,
             'channel_id' => $rule->channel_id,
             'template_id' => $rule->template_id,
+            'rule_id' => $rule->id,
             'recipient' => is_string($recipient) ? $recipient : "webhook:{$webhook->id}",
             'subject' => $template?->subject,
             'body_preview' => $template ? $template->render(array_filter($payload, 'is_scalar')) : null,
