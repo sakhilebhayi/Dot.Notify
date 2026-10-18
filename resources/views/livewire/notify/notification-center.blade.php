@@ -1,18 +1,18 @@
-<div class="dot-card" style="padding:1.5rem;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;gap:0.75rem;flex-wrap:wrap;">
+<div class="dot-card dot-card-pad">
+    <div class="card-head">
         <h3 style="font-family:'Syne',sans-serif;font-size:0.875rem;font-weight:700;color:#f4f4f5;margin:0;">Notification Log</h3>
-        <div style="display:flex;align-items:center;gap:0.5rem;">
-            <div style="position:relative;">
-                <span class="material-symbols-rounded" style="position:absolute;left:8px;top:50%;transform:translateY(-50%);font-size:14px;color:#52525b;pointer-events:none;">search</span>
+        <div class="toolbar">
+            <div class="toolbar-search">
+                <span class="material-symbols-rounded" aria-hidden="true" style="position:absolute;left:8px;top:50%;transform:translateY(-50%);font-size:14px;color:#52525b;pointer-events:none;">search</span>
                 <input
                     type="text"
                     wire:model.live.debounce.400ms="search"
                     placeholder="Search recipient or subject…"
                     class="dot-input"
-                    style="font-size:11px;padding:5px 8px 5px 26px;width:200px;"
+                    aria-label="Search recipient or subject"
                 >
             </div>
-            <select wire:model.live="filterStatus" class="dot-input" style="font-size:11px;padding:4px 8px;width:auto;">
+            <select wire:model.live="filterStatus" class="dot-input toolbar-select" aria-label="Filter by status">
                 <option value="">All statuses</option>
                 <option value="queued">Queued</option>
                 <option value="sending">Sending</option>
@@ -39,12 +39,12 @@
     @else
         <div style="display:grid;gap:0.4rem;">
             @foreach($this->logs as $log)
-            <div style="display:flex;align-items:center;justify-content:space-between;padding:0.65rem 0.75rem;background:rgba(255,255,255,0.03);border-radius:8px;">
-                <div style="min-width:0;flex:1;">
-                    <div style="font-size:12px;font-weight:600;color:#d4d4d8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $log->recipient }}</div>
+            <div class="dot-row">
+                <div class="dot-row-main">
+                    <div class="row-break" style="font-size:12px;font-weight:600;color:#d4d4d8;">{{ $log->recipient }}</div>
                     <div style="font-size:11px;color:#52525b;">{{ $log->subject ?? 'No subject' }} · {{ $log->created_at->diffForHumans() }}</div>
                 </div>
-                <span style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:100px;flex-shrink:0;margin-left:0.5rem;{{ $log->wasSent() ? 'background:rgba(34,197,94,0.1);color:#22c55e;' : ($log->hasFailed() ? 'background:rgba(239,68,68,0.1);color:#ef4444;' : 'background:rgba(245,158,11,0.1);color:#f59e0b;') }}">
+                <span style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:100px;flex-shrink:0;{{ $log->wasSent() ? 'background:rgba(34,197,94,0.1);color:#22c55e;' : ($log->hasFailed() ? 'background:rgba(239,68,68,0.1);color:#ef4444;' : 'background:rgba(245,158,11,0.1);color:#f59e0b;') }}">
                     {{ ucfirst($log->status) }}
                 </span>
             </div>

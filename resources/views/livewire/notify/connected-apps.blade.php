@@ -36,9 +36,20 @@
         .ca-h { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.08em; color:#a1a1aa; }
         .ca-keys { display:flex; flex-wrap:wrap; gap:.3rem; margin:.35rem 0 0; padding:0; list-style:none; }
         .ca-keys code { font-family:'JetBrains Mono',monospace; font-size:11px; color:#d4d4d8; background:rgba(255,255,255,0.06); padding:1px 6px; border-radius:4px; }
-        @media (max-width: 960px) {
+        .ca-label, .ca-event, .ca-desc, .ca-meta, .ca-pre, .ca-flag { overflow-wrap:anywhere; }
+        .ca-app-head { flex-wrap:wrap; }
+        /* The three-column row needs room beside the 260px sidebar, so it stacks below 1100px */
+        @media (max-width: 1099.98px) {
             .ca-row { grid-template-columns:minmax(0,1fr); }
             .ca-details-body { grid-template-columns:minmax(0,1fr); }
+        }
+        @media (max-width: 859.98px) {
+            .ca-head { font-size:1.25rem; }
+            .ca-app-head, .ca-row, .ca-offline { padding-left:1rem; padding-right:1rem; }
+            .ca-event { display:block; margin-left:0; margin-top:.15rem; }
+            /* 44px touch target around the 38x22 switch, without changing how it looks */
+            .ca-switch::before { content:''; position:absolute; inset:-11px -3px; }
+            .ca-switchline { gap:.75rem; }
         }
     </style>
 
