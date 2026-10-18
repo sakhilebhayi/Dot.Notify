@@ -74,7 +74,7 @@ class NotifyDispatcherWebhookTest extends TestCase
 
     public function test_a_failing_webhook_response_is_recorded_with_the_status_code(): void
     {
-        Http::fake(['https://example.com/hook' => Http::response('', 500)]);
+        Http::fake(['https://example.com/hook' => Http::response('', 400)]);
 
         $team = User::factory()->withPersonalTeam()->create()->currentTeam;
 
@@ -96,7 +96,22 @@ class NotifyDispatcherWebhookTest extends TestCase
 
         $log->refresh();
         $this->assertSame('failed', $log->status);
-        $this->assertSame('Webhook returned HTTP 500.', $log->failure_reason);
+        $this->assertSame('Webhook returned HTTP 400.', $log->failure_reason);
+    }
+
+    public function test_a_5xx_webhook_response_is_retried_not_failed(): void
+    {
+        Http::fake(['https://example.com/hook' => Http::response('', 500)]);
+
+        $team = User::factory()->withPersonalTeam()->create()->currentTeam;
+        $channel = NotifyChannel::create(['team_id' => $team->id, 'type' => 'webhook', 'name' => 'Webhook', 'config' => ['url' => 'https://example.com/hook']]);
+        $log = NotifyLog::create(['team_id' => $team->id, 'channel_id' => $channel->id, 'recipient' => 'x@example.com', 'status' => 'queued']);
+
+        app(NotifyDispatcher::class)->dispatch($log);
+
+        $log->refresh();
+        $this->assertSame('retrying', $log->status);
+        $this->assertSame('Webhook returned HTTP 500.', $log->last_error);
     }
 
     public function test_a_configured_slack_channel_posts_and_is_marked_sent(): void

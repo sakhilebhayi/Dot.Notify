@@ -24,8 +24,16 @@ class NotifyChannel extends Model
         'test_status',
     ];
 
+    /**
+     * SMTP credentials and Slack/webhook URLs live in config. Encrypted at
+     * rest (see the 2026_10_18_1202 migration) and never serialized.
+     */
+    protected $hidden = [
+        'config',
+    ];
+
     protected $casts = [
-        'config' => 'array',
+        'config' => 'encrypted:array',
         'is_active' => 'boolean',
         'last_tested_at' => 'datetime',
     ];

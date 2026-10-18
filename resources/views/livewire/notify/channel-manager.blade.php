@@ -1,9 +1,11 @@
 <div class="dot-card" style="padding:1.5rem;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;">
         <h3 style="font-family:'Syne',sans-serif;font-size:0.875rem;font-weight:700;color:#f4f4f5;margin:0;">Channels</h3>
+        @can('create', [\App\Models\NotifyChannel::class, auth()->user()->currentTeam])
         <button wire:click="$toggle('showForm')" class="dot-btn dot-btn-ghost" style="font-size:12px;padding:5px 12px;">
             {{ $showForm ? 'Cancel' : '+ Add Channel' }}
         </button>
+        @endcan
     </div>
 
     @if($showForm)
@@ -59,8 +61,12 @@
                     <span style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:100px;{{ $channel->is_active ? 'background:rgba(34,197,94,0.1);color:#22c55e;' : 'background:rgba(255,255,255,0.06);color:#71717a;' }}">
                         {{ $channel->is_active ? 'Active' : 'Inactive' }}
                     </span>
+                    @can('update', $channel)
                     <button wire:click="toggleChannel({{ $channel->id }})" class="dot-btn dot-btn-ghost" style="font-size:11px;padding:3px 8px;">Toggle</button>
+                    @endcan
+                    @can('delete', $channel)
                     <button wire:click="deleteChannel({{ $channel->id }})" style="background:none;border:none;color:#52525b;cursor:pointer;font-size:11px;padding:3px 8px;">Remove</button>
+                    @endcan
                 </div>
             </div>
             @endforeach

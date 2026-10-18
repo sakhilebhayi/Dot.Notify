@@ -9,10 +9,15 @@ use Livewire\Component;
 
 /**
  * In-app notification bell for Dot.Notify's own operators (platform-loop
- * pass, 2026-08-01) — surfaces ChannelDegradedNotification and
- * BatchFailedNotification records via Laravel's `database` notification
- * channel. See NotifyChannel::booted() / NotifyBatch::booted() for what
- * dispatches these.
+ * pass, 2026-08-01) — surfaces ChannelDegradedNotification,
+ * BatchFailedNotification, and QueuedNotificationDelivered records via
+ * Laravel's `database` notification channel. See NotifyChannel::booted() /
+ * NotifyBatch::booted() / NotifyDispatcher for what dispatches these.
+ *
+ * Updates live: those three notification classes also broadcast over
+ * Reverb (the 'broadcast' channel in their via()), and
+ * resources/js/notifications.js listens on the current user's private
+ * channel and dispatches 'notification-received' below.
  */
 class NotificationBell extends Component
 {
@@ -45,6 +50,18 @@ class NotificationBell extends Component
     public function markAllAsRead(): void
     {
         auth()->user()->unreadNotifications->markAsRead();
+        unset($this->notifications, $this->unreadCount);
+    }
+
+    /**
+     * A new notification arrived over the WebSocket -- bust the cached
+     * computed properties so the next render picks it up. Deliberately
+     * distinct from markAllAsRead() above: receiving a new notification
+     * must not mark existing ones as read.
+     */
+    #[On('notification-received')]
+    public function refresh(): void
+    {
         unset($this->notifications, $this->unreadCount);
     }
 

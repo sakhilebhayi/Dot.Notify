@@ -1,10 +1,12 @@
 <div class="dot-card" style="padding:1.5rem;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;">
         <h3 style="font-family:'Syne',sans-serif;font-size:0.875rem;font-weight:700;color:#f4f4f5;margin:0;">Templates</h3>
+        @can('create', [\App\Models\NotifyTemplate::class, auth()->user()->currentTeam])
         <button wire:click="$toggle('showForm')" class="dot-btn dot-btn-ghost" style="font-size:12px;padding:5px 12px;">
             <span class="material-symbols-rounded" style="font-size:14px;">auto_awesome</span>
             {{ $showForm ? 'Cancel' : 'AI Generate' }}
         </button>
+        @endcan
     </div>
 
     @if($showForm)
@@ -46,7 +48,7 @@
 
     @if($this->templates->isEmpty())
         <div style="text-align:center;padding:1.5rem 0;">
-            <p style="font-size:0.8rem;color:#52525b;margin:0;">No templates yet. Use AI to generate your first one.</p>
+            <p style="font-size:0.8rem;color:#52525b;margin:0;">No templates yet.@can('create', [\App\Models\NotifyTemplate::class, auth()->user()->currentTeam]) Use AI to generate your first one.@endcan</p>
         </div>
     @else
         <div style="display:grid;gap:0.4rem;">

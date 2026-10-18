@@ -2,12 +2,14 @@
 
 namespace Tests\Feature\Notify;
 
+use App\Livewire\Notify\NotificationCenter;
 use App\Models\NotifyBatch;
 use App\Models\NotifyChannel;
 use App\Models\NotifyLog;
 use App\Models\Team;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 /**
@@ -42,26 +44,46 @@ class NotifyDashboardTest extends TestCase
             ->assertViewHas('totalChannels', 2);
     }
 
-    public function test_delivery_success_rate_is_null_with_no_resolved_logs(): void
+    public function test_dashboard_only_reports_statuses_something_actually_produces(): void
     {
         $this->actingAs($this->user)
             ->get('/dashboard')
             ->assertOk()
-            ->assertViewHas('deliverySuccessRate', null);
+            ->assertViewHas('retrying', 0)
+            ->assertViewHas('suppressed30d', 0)
+            ->assertViewMissing('deliverySuccessRate')
+            ->assertDontSee('Delivery Success')
+            ->assertDontSee('Opened')
+            ->assertDontSee('Clicked')
+            ->assertDontSee('Bounced');
     }
 
-    public function test_delivery_success_rate_reflects_resolved_logs_only(): void
+    public function test_dashboard_counts_sent_failed_suppressed_and_retrying_logs(): void
     {
-        NotifyLog::create(['team_id' => $this->team->id, 'recipient' => 'a@example.com', 'status' => 'delivered']);
-        NotifyLog::create(['team_id' => $this->team->id, 'recipient' => 'b@example.com', 'status' => 'delivered']);
+        NotifyLog::create(['team_id' => $this->team->id, 'recipient' => 'a@example.com', 'status' => 'sent', 'sent_at' => now()]);
+        NotifyLog::create(['team_id' => $this->team->id, 'recipient' => 'b@example.com', 'status' => 'sent', 'sent_at' => now()]);
         NotifyLog::create(['team_id' => $this->team->id, 'recipient' => 'c@example.com', 'status' => 'failed']);
-        // Still in-flight, must not count toward the rate.
-        NotifyLog::create(['team_id' => $this->team->id, 'recipient' => 'd@example.com', 'status' => 'queued']);
+        NotifyLog::create(['team_id' => $this->team->id, 'recipient' => 'd@example.com', 'status' => 'retrying', 'attempts' => 1]);
+        NotifyLog::create(['team_id' => $this->team->id, 'recipient' => 'e@example.com', 'status' => 'suppressed']);
+        NotifyLog::create(['team_id' => $this->team->id, 'recipient' => 'f@example.com', 'status' => 'queued']);
 
         $this->actingAs($this->user)
             ->get('/dashboard')
             ->assertOk()
-            ->assertViewHas('deliverySuccessRate', 66.7);
+            ->assertViewHas('sentToday', 2)
+            ->assertViewHas('failedToday', 1)
+            ->assertViewHas('retrying', 1)
+            ->assertViewHas('suppressed30d', 1);
+    }
+
+    public function test_the_log_status_filter_offers_only_real_statuses(): void
+    {
+        Livewire::actingAs($this->user)->test(NotificationCenter::class)
+            ->assertSee('Retrying')
+            ->assertSee('Suppressed')
+            ->assertDontSee('Opened')
+            ->assertDontSee('Clicked')
+            ->assertDontSee('Bounced');
     }
 
     public function test_dashboard_lists_recent_batches(): void

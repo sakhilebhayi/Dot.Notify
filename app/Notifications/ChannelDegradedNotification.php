@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Models\NotifyChannel;
+use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Notification;
 
 /**
@@ -10,6 +11,10 @@ use Illuminate\Notifications\Notification;
  * the moment one of that team's delivery channels flips to test_status
  * "failed" — dispatched from NotifyChannel::booted() so operators find out
  * a channel is degraded without having to watch the Channels panel.
+ *
+ * Also broadcasts over Reverb so NotificationBell.php updates live instead
+ * of only on page load -- see routes/channels.php /
+ * BroadcastServiceProvider for the App.Models.User.{id} channel this uses.
  */
 class ChannelDegradedNotification extends Notification
 {
@@ -20,7 +25,12 @@ class ChannelDegradedNotification extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['database'];
+        return ['database', 'broadcast'];
+    }
+
+    public function toBroadcast(object $notifiable): BroadcastMessage
+    {
+        return new BroadcastMessage($this->toDatabase($notifiable));
     }
 
     /**

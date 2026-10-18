@@ -27,14 +27,14 @@ When a team or another platform triggers a notification, we process:
 
 - **Recipient details** — whatever contact information the channel requires (an email address, phone number, push token, Slack workspace/channel, or webhook URL), supplied by the triggering team, not collected by us directly from the recipient.
 - **Message content** — the subject and body of the notification, built from a team's own template.
-- **Delivery and engagement status** — whether a notification was queued, sent, delivered, opened, or clicked, and whether it failed or bounced. Opens and clicks are tracked using a tracking pixel or link redirect, standard practice for delivery/engagement measurement across the ecosystem.
+- **Delivery and engagement status** — whether a notification was queued, sent, retried, or suppressed by an opt-out, and whether it failed, with the reason. Dot.Notify does not currently track opens or clicks (no tracking pixel or link redirect is added to messages); if that changes, this policy will be updated first.
 - **Notification preferences** — if you're the recipient and also have a Dot Ecosystem account, your opt-in/opt-out choice per notification type and channel is recorded and respected.
 
 We process this data only as instructed by the team or platform that triggered the notification — we don't use it for our own marketing, and we don't sell it.
 
 ## 5. Inbound webhooks from third parties
 
-Some teams configure Dot.Notify to receive events directly from third-party systems (for example, a payment processor or code-hosting platform), which we verify using a signed request scheme before routing them into a notification. Any personal information in those inbound payloads is processed on the receiving team's instructions, on the same operator basis described in §2.
+Some teams configure Dot.Notify to receive events directly from third-party systems (for example, a payment processor or code-hosting platform), which we verify using a signed request scheme before routing them into a notification. Other Dot Ecosystem platforms can also send signed events to Dot.Notify on behalf of a company they share with it, to be routed the same way. Any personal information in those inbound payloads is processed on the receiving team's instructions, on the same operator basis described in §2.
 
 ## 6. AI-assisted template drafting
 

@@ -4,6 +4,9 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    @auth
+    <meta name="user-id" content="{{ auth()->id() }}">
+    @endauth
     <title>Dot.Notify</title>
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
@@ -114,6 +117,10 @@
             <a href="{{ route('dashboard') }}" class="nav-item {{ request()->routeIs('dashboard') ? 'active' : '' }}">
                 <span class="material-symbols-rounded nav-icon">dashboard</span>
                 Dashboard
+            </a>
+            <a href="{{ route('connected-apps') }}" class="nav-item {{ request()->routeIs('connected-apps') ? 'active' : '' }}">
+                <span class="material-symbols-rounded nav-icon">hub</span>
+                Connected apps
             </a>
             <div class="sidebar-divider" style="margin:10px 0;"></div>
             <a href="{{ route('profile.show') }}" class="nav-item {{ request()->routeIs('profile.show') ? 'active' : '' }}">
