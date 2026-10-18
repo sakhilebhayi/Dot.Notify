@@ -2,6 +2,7 @@
 
 use App\Console\Commands\DispatchDueSchedules;
 use App\Console\Commands\DispatchQueuedNotifications;
+use App\Console\Commands\PublishMetrics;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -26,3 +27,11 @@ Schedule::command(DispatchQueuedNotifications::class)
 Schedule::command(DispatchDueSchedules::class)
     ->everyMinute()
     ->withoutOverlapping();
+
+// Daily aggregate snapshot for Dot.Analytics (counts from the delivery log, per company). Queued; sends nothing
+// until ANALYTICS_INGEST_URL and ANALYTICS_INGEST_SECRET are set. Needs a queue worker, like delivery does.
+Schedule::command(PublishMetrics::class)
+    ->dailyAt('03:00')
+    ->timezone('UTC')
+    ->withoutOverlapping()
+    ->onOneServer();

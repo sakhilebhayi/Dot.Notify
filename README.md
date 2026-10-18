@@ -142,6 +142,36 @@ The page also shows, per event, when the company last received it and what happe
 
 A recipient who has a Dot.Notify account can switch one event type off per channel type (`NotifyPreference::setForEvent($user, 'task.due_soon', 'email', false)`; rows keep `event = ''` for the older category-wide opt-outs). The send step then marks the notification `suppressed` with the reason. `security` notices are never suppressed, and none of today's events is one. There is no screen for this yet, and email footers do not carry a signed unsubscribe link: both are out of scope for this change, so today an opt-out is recorded by an operator or a future preferences page.
 
+## Metrics for Dot.Analytics
+
+Notify also publishes its own numbers. Once a day (03:00 UTC, `notify:publish-metrics`) it queues one signed
+snapshot per company to Dot.Analytics' server-to-server ingest (`POST /api/ingest/snapshots`) through
+`App\Services\Analytics\AnalyticsClient` and `App\Jobs\SendAnalyticsSnapshot`. A company is a non-personal team
+linked to InfoDot (`teams.infodot_team_uuid`); personal and unlinked teams are skipped.
+
+What is sent, and nothing else (Dot.Analytics' `notify` catalogue; counts from the company's delivery log only,
+never a recipient, subject, body, event name or error text, and no money, so no `currency`). Windows are UTC, the 7
+days ending when the command runs, and a message counts when it reached its outcome rather than when it was queued:
+
+| Key | Meaning |
+|---|---|
+| `sent_7d` | messages with status `sent` (and the legacy `delivered`/`opened`/`clicked`) whose `sent_at` is in the window. "Sent" means a channel accepted it, as everywhere in this app, not that it reached an inbox |
+| `failed_7d` | messages with status `failed` (and legacy `bounced`) that failed in the window. There is no `failed_at` column; failed is terminal, so `updated_at` is when it failed |
+| `suppressed_7d` | messages stopped by a recipient's opt-out in the window (same reasoning, `updated_at`) |
+
+Queued, sending and retrying messages have no outcome yet and are counted in none of them. The snapshot is stamped
+`taken_at` = the start of the UTC day, so a retry or a second run the same day is the same snapshot upstream
+(Dot.Analytics keeps the first one it received for a day).
+
+Nothing is sent until `ANALYTICS_INGEST_URL` (the full URL ending `/api/ingest/snapshots`) **and**
+`ANALYTICS_INGEST_SECRET` are set; the secret is the same value as `ANALYTICS_INGEST_SECRET_NOTIFY` in
+Dot.Analytics' `.env`, and `ANALYTICS_PLATFORM_KEY` defaults to `notify`. Requests are HMAC-SHA256 signed over
+`"{timestamp}.{raw body}"` at send time, time out after 5 seconds, are retried up to 3 times with backoff, never
+throw into the app, and stop for 5 minutes (circuit breaker) after 5 failures in a row, so an Analytics outage or a
+wrong URL cannot affect delivery. This needs the scheduler (`* * * * * php artisan schedule:run`, already required
+for delivery) and a queue worker. Try it safely with `php artisan notify:publish-metrics --dry-run` (prints the
+payloads, sends nothing) and `--company=<uuid>`.
+
 ## Roles
 
 Access follows the team (company) role. InfoDot is the source of truth and the role is re-applied at every sign-in.
