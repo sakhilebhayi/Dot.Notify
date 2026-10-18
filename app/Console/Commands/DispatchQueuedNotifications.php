@@ -2,33 +2,53 @@
 
 namespace App\Console\Commands;
 
+use App\Jobs\DeliverNotifyLog;
 use App\Models\NotifyLog;
-use App\Services\NotifyDispatcher;
 use Illuminate\Console\Command;
 
 /**
- * This platform's first scheduled job (Dot.Brain audit's own named Level
- * 1 gap, dot-notify.md). Dispatches every queued NotifyLog to its real
- * channel driver via App\Services\NotifyDispatcher — see
- * docs/superpowers/specs/2026-08-09-queued-notification-dispatch-design.md.
+ * Thin sweeper, run every minute. It never sends anything itself:
  *
- * No Level 2 gate: the human approval already happened when the team
- * configured the NotifyRule and activated the NotifyChannel that produced
- * this queued log.
+ *  1. Rows stuck in "sending" past the stale window (a worker died mid-send)
+ *     are marked failed with an honest "outcome unknown" reason. They are NOT
+ *     re-sent, because the send may have gone through.
+ *  2. At most --limit due logs (queued, or retrying whose next_retry_at has
+ *     passed) are handed to the queue as DeliverNotifyLog jobs, oldest first.
+ *
+ * It is a safety net: the ingest endpoint and each retry already enqueue
+ * their own jobs. Delivery needs a running queue worker.
  */
 class DispatchQueuedNotifications extends Command
 {
-    protected $signature = 'notify:dispatch-queued';
+    protected $signature = 'notify:dispatch-queued {--limit= : Most logs to enqueue this run (default notify.delivery.sweep_batch)}';
 
-    protected $description = 'Dispatch every queued NotifyLog to its channel driver.';
+    protected $description = 'Enqueue due queued/retrying NotifyLogs for delivery (bounded; never sends inline).';
 
-    public function handle(NotifyDispatcher $dispatcher): int
+    public function handle(): int
     {
-        NotifyLog::where('status', 'queued')->get()->each(
-            fn (NotifyLog $log) => $dispatcher->dispatch($log)
-        );
+        $limit = max(1, (int) ($this->option('limit') ?: config('notify.delivery.sweep_batch', 100)));
 
-        $this->info('Queued notification dispatch complete.');
+        $reaped = NotifyLog::withoutGlobalScopes()
+            ->where('status', 'sending')
+            ->where('last_attempt_at', '<', now()->subMinutes((int) config('notify.delivery.stale_sending_minutes', 15)))
+            ->update([
+                'status' => 'failed',
+                'failure_reason' => 'Delivery outcome unknown: a worker stopped mid-send. Not retried automatically so the recipient is not sent it twice; check the destination before re-queuing.',
+                'updated_at' => now(),
+            ]);
+
+        $ids = NotifyLog::withoutGlobalScopes()
+            ->whereIn('status', ['queued', 'retrying'])
+            ->where(fn ($q) => $q->whereNull('next_retry_at')->orWhere('next_retry_at', '<=', now()))
+            ->orderBy('id')
+            ->limit($limit)
+            ->pluck('id');
+
+        foreach ($ids as $id) {
+            DeliverNotifyLog::dispatch($id);
+        }
+
+        $this->info("Queued notification sweep complete: {$ids->count()} enqueued, {$reaped} stuck row(s) failed.");
 
         return self::SUCCESS;
     }

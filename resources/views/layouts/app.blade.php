@@ -118,6 +118,10 @@
                 <span class="material-symbols-rounded nav-icon">dashboard</span>
                 Dashboard
             </a>
+            <a href="{{ route('connected-apps') }}" class="nav-item {{ request()->routeIs('connected-apps') ? 'active' : '' }}">
+                <span class="material-symbols-rounded nav-icon">hub</span>
+                Connected apps
+            </a>
             <div class="sidebar-divider" style="margin:10px 0;"></div>
             <a href="{{ route('profile.show') }}" class="nav-item {{ request()->routeIs('profile.show') ? 'active' : '' }}">
                 <span class="material-symbols-rounded nav-icon">manage_accounts</span>

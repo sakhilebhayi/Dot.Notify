@@ -8,6 +8,7 @@ use App\Models\NotifyTemplate;
 use App\Models\Team;
 use App\Rules\NoAbsenceTriggerConditions;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
@@ -57,7 +58,7 @@ class RuleManager extends Component
     #[Computed]
     public function rules()
     {
-        return NotifyRule::with(['template', 'channel'])->orderByDesc('created_at')->get();
+        return NotifyRule::with(['template', 'channel', 'team'])->orderByDesc('created_at')->get();
     }
 
     #[Computed]
@@ -75,6 +76,10 @@ class RuleManager extends Component
     public function edit(int $id): void
     {
         $rule = NotifyRule::findOrFail($id);
+
+        // Opening the form is the first step of a write, so it needs the same
+        // standing as saving it.
+        Gate::authorize('update', $rule);
 
         $this->editingId = $rule->id;
         $this->triggerEvent = $rule->trigger_event;
@@ -102,6 +107,12 @@ class RuleManager extends Component
 
         if (! $team) {
             abort(403, 'No active team selected.');
+        }
+
+        if ($this->editingId) {
+            Gate::authorize('update', NotifyRule::findOrFail($this->editingId));
+        } else {
+            Gate::authorize('create', [NotifyRule::class, $team]);
         }
 
         $this->validate([
@@ -165,13 +176,16 @@ class RuleManager extends Component
     public function toggleRule(int $id): void
     {
         $rule = NotifyRule::findOrFail($id);
+        Gate::authorize('update', $rule);
         $rule->update(['is_active' => ! $rule->is_active]);
         unset($this->rules);
     }
 
     public function deleteRule(int $id): void
     {
-        NotifyRule::findOrFail($id)->delete();
+        $rule = NotifyRule::findOrFail($id);
+        Gate::authorize('delete', $rule);
+        $rule->delete();
         unset($this->rules);
     }
 

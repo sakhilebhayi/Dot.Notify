@@ -30,6 +30,7 @@ class NotifyWebhook extends Model
     ];
 
     protected $casts = [
+        'signing_secret' => 'encrypted',
         'event_map' => 'array',
         'is_active' => 'boolean',
         'last_received_at' => 'datetime',

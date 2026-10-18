@@ -10,7 +10,7 @@ We don't use advertising or third-party analytics cookies.
 
 ## 2. Tracking pixels and link tracking in sent notifications
 
-Separately from cookies, notifications sent through Dot.Notify on a team's behalf may include a tracking pixel (to record when an email is opened) or tracked links (to record when a link is clicked). This is not a cookie — it's how delivery/engagement status (§4 of our Privacy Policy) is measured for the team that sent the notification. If you have questions about tracking in a specific notification you received, contact the team or platform that sent it.
+Dot.Notify does not currently add tracking pixels or tracked links to the notifications it sends, so it does not record when a message is opened or a link is clicked. It records only whether the channel accepted the message (§4 of our Privacy Policy). If that ever changes, this page and the Privacy Policy will be updated first. A team that sends through Dot.Notify may still add its own tracking to its own template content; if you have questions about a specific notification you received, contact the team or platform that sent it.
 
 ## 3. Why we use the session cookie
 

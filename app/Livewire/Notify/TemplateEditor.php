@@ -6,6 +6,7 @@ use App\Models\NotifyTemplate;
 use App\Models\Team;
 use App\Services\AiNotifyService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
@@ -46,6 +47,17 @@ class TemplateEditor extends Component
 
     public function generate(): void
     {
+        // The generator costs an AI call and only ever feeds saveTemplate(), which is
+        // owner/admin only. Authorize it the same way so a read-only member (viewer
+        // or editor) cannot spend it from a crafted Livewire call.
+        $team = $this->resolveCurrentTeam();
+
+        if (! $team) {
+            abort(403, 'No active team selected.');
+        }
+
+        Gate::authorize('create', [NotifyTemplate::class, $team]);
+
         $this->validate([
             'purpose' => 'required|string|max:200',
             'channelType' => 'required|string',
@@ -69,6 +81,8 @@ class TemplateEditor extends Component
         if (! $team) {
             abort(403, 'No active team selected.');
         }
+
+        Gate::authorize('create', [NotifyTemplate::class, $team]);
 
         $this->validate([
             'templateName' => 'required|string|max:100',

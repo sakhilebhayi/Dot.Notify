@@ -20,7 +20,7 @@
 
 ## What is Dot.Notify?
 
-Dot.Notify is the notification management platform in the InfoDot ecosystem. Teams configure delivery channels, build message templates with AI assistance, set event-triggered routing rules, and track every notification's journey from queue to delivery — with full analytics on open and click rates.
+Dot.Notify is the notification management platform in the InfoDot ecosystem. Teams configure delivery channels, build message templates with AI assistance, set event-triggered routing rules, and track every notification from queue to send. Other Dot apps can call it over a signed server-to-server API.
 
 ## Core Features
 
@@ -28,8 +28,12 @@ Dot.Notify is the notification management platform in the InfoDot ecosystem. Tea
 - Template builder with {{ variable }} interpolation
 - AI template generation — describe the notification, get copy in seconds (falls back to a deterministic stub if no API key is configured)
 - Rule engine model (`NotifyRule`) mapping trigger events to a channel + template — no management UI yet, see Roadmap
-- Delivery log — full audit trail with status per recipient, searchable by recipient/subject and filterable by status
-- User preference management — opt-in/out per notification type
+- Delivery log — audit trail with status per recipient (queued, sending, retrying, sent, failed, suppressed), searchable by recipient/subject and filterable by status. Notify records that a channel accepted a message; it does not receive opens, clicks, bounces or inbox-delivery confirmations, and does not show them
+- Service ingest API — `POST /api/ingest/events`, signed per calling platform, idempotent, rate limited; routes through the company's existing rules, templates and channels
+- Event catalogue — the 16 events the Dot apps send, each with a default email and the only data keys it may carry; a company switches them on from the Connected apps page (see below)
+- Queued delivery — retries with exponential backoff, row claim so a crash cannot double-send, opt-outs enforced
+- Secrets encrypted at rest (channel config, webhook signing secrets); outbound webhook/Slack calls block private networks
+- User preference opt-outs per notification type, and per catalogued event, on a channel are enforced at send time (security notices are always sent); there is no UI to edit them yet
 - Bulk batch sends with delivery rate tracking
 - Auto-generated webhook endpoint tokens (`NotifyWebhook`) — the receiving HTTP endpoint itself is not implemented yet, see Roadmap
 - In-app self-notifications for this platform's own operators (channel degraded, batch failed)
@@ -40,8 +44,8 @@ Dot.Notify is the notification management platform in the InfoDot ecosystem. Tea
 - **NotifyChannel** — configured delivery channel (email, SMS, etc.)
 - **NotifyTemplate** — message template with variable support
 - **NotifyRule** — trigger-to-channel routing rule
-- **NotifyLog** — delivery audit record per recipient
-- **NotifyPreference** — per-user opt-in/out by notification type + channel
+- **NotifyLog** — delivery audit record per recipient (status, attempts, last_error, next_retry_at)
+- **NotifyPreference** — per-user opt-in/out by notification type + channel, or by one catalogued event (`event`)
 - **NotifyBatch** — bulk send with progress/delivery-rate tracking
 - **NotifyWebhook** — inbound webhook endpoint registration (token generation only; no receiving route yet)
 
@@ -53,6 +57,103 @@ Dot.Notify is the notification management platform in the InfoDot ecosystem. Tea
 - `NotifyRule` management UI (the model and relationships exist, no Livewire component yet)
 - `NotifySchedule` model + recurring-send execution (table exists, unused)
 - Knowledge Pack publishing to Dot.Brain (`observation`/`insight`/`outcome`/`incident`) — see `wiki.md` for the target shape
+
+## Event catalogue and enabling events
+
+Dot apps do not invent event names. `config/notify_events.php` (version 1) is the one list of events the apps send to the ingest API, who each one is for, the email each starts from, and the only data keys each may carry. The calling apps are written against exactly these names and keys; to add or rename one, bump `version` and tell the calling apps first. The page **Connected apps** (`/connected-apps`) lists them for every company.
+
+| App | Event | Recipient | Data keys kept |
+|---|---|---|---|
+| Dot.Tasks | `task.assigned` | user | `task_title`, `board_name`, `assigned_by`, `due_date`, `url` |
+| Dot.Tasks | `task.due_soon` | user | `task_title`, `board_name`, `due_date`, `url` |
+| Dot.Tasks | `task.escalated` | user | `task_title`, `board_name`, `owner_name`, `url` |
+| Dot.Tasks | `task.mentioned` | user | `task_title`, `board_name`, `mentioned_by`, `url` |
+| Dot.HR | `leave.requested` | approvers | `employee_name`, `leave_type`, `start_date`, `end_date`, `days`, `url` |
+| Dot.HR | `leave.decided` | user | `leave_type`, `start_date`, `end_date`, `decision`, `decided_by`, `url` |
+| Dot.Auction | `auction.outbid` | user | `auction_title`, `your_bid`, `current_price`, `currency`, `ends_at`, `url` |
+| Dot.Auction | `auction.won` | user | `auction_title`, `final_price`, `currency`, `url` |
+| Dot.Auction | `auction.sold` | user | `auction_title`, `final_price`, `currency`, `status`, `url` |
+| Dot.Auction | `auction.ending_soon` | user | `auction_title`, `current_price`, `currency`, `ends_at`, `url` |
+| Dot.Ehail | `ride.accepted` | user | `driver_name`, `vehicle`, `url` |
+| Dot.Ehail | `ride.cancelled` | user | `cancelled_by_role`, `reason`, `url` |
+| Dot.Ehail | `ride.expired` | user | `url` |
+| Dot.Ehail | `driver.application_decided` | user | `decision`, `fleet_name`, `note`, `url` |
+| Dot.Farms | `harvest.recorded` | user | `farm_name`, `field_name`, `crop`, `quantity`, `unit`, `harvested_at`, `url` |
+| Dot.Billing | `invoice.overdue` | user | `team_name`, `invoice_number`, `total`, `balance`, `currency`, `due_date`, `days_overdue`, `invoice_url` |
+
+`user` is the one person the event is about. `approvers` (leave requests only) are the people who must act on it: the calling app sends one call per approver, with that person as the recipient. Dot.Billing's link key is `invoice_url` (not `url`), because that is what its NotifyClient sends today.
+
+### What a calling app sends
+
+`POST /api/ingest/events`, server to server, JSON body, signed with the platform's own secret (`NOTIFY_INGEST_SECRET_<KEY>` here; the same value in the calling app):
+
+```
+X-InfoDot-Timestamp: <unix seconds, within 5 minutes of now>
+X-InfoDot-Signature: sha256=<hex hmac_sha256("{timestamp}.{raw body}", platform secret)>
+Content-Type: application/json
+```
+
+```json
+{
+  "platform": "tasks",
+  "company_uuid": "<the InfoDot company uuid, teams.infodot_team_uuid>",
+  "event": "task.assigned",
+  "recipient": { "email": "amara@example.co.za" },
+  "data": {
+    "task_title": "Ship the launch page",
+    "board_name": "Launch",
+    "assigned_by": "Bongani",
+    "due_date": "2026-11-02",
+    "url": "https://tasks.infodot.app/boards/4?task=19"
+  },
+  "idempotency_key": "task.assigned:19:3f9a1c2e:2026-10-18"
+}
+```
+
+Rules for `data` on a catalogued event (anything not catalogued is accepted as before, unfiltered):
+
+- Only the keys in the table are kept. Anything else is dropped before the event is stored or the email is rendered. The names of dropped keys (never their values) are kept on the stored event as `dropped_data_keys`, so a misspelled key is easy to spot.
+- Every value must be a single value: text, a number or true/false. A list or object under an allowed key is refused with `422 {"error":"invalid_request","errors":{"data.<key>":[...]}}`; under an unknown key it is simply dropped.
+- Text has control characters and line breaks turned into spaces and is cut to 500 characters (`max_value_length`). Send nothing, or `null`, for a field you do not have: a line of the email whose fields are all empty is left out.
+- A key named `url` or ending `_url` must be an absolute `https` URL on the calling platform's own host (the host of that platform's `DOT_<KEY>_URL` in `config/ecosystem.php`, no other port than 443, no user info, at most 2048 characters). Anything else, including `javascript:`, `http:` and links to other hosts, is dropped.
+- `leave.requested` never carries a reason: there is no key for it, so one sent anyway is dropped and never stored or emailed.
+- A catalogued event is only accepted from the platform that owns it (Dot.Billing cannot send `task.assigned`); from another platform it is recorded as `no_rule` and nothing it sent is kept.
+- `notification_type` is taken from the catalogue for catalogued events (all `transactional` today); the caller's value is ignored.
+
+Responses are those in `wiki.md` (202/200/401/404/422/429). `status` is `routed` (queued for delivery), `no_rule` (the company has not switched this event on), `ignored` (the rule's hourly limit) or `failed` (the rule has no usable channel or template).
+
+**Idempotency key.** Send the same key for the same thing and a new key for a new thing; a repeat with the same key sends nothing. Build it as `{event}:{subject id}:{recipient hash}:{bucket}`: the event name, the id of the thing it is about (task, leave request, auction, ride, invoice), a short hash of the recipient's email (so each approver of one leave request gets their own message), and a bucket for how often the same event may repeat (a date for a daily reminder, the decision timestamp or version for a decision, nothing extra for a one-off). Keys are unique per company and platform, at most 120 characters.
+
+### How a company turns events on
+
+Nothing is sent for an event until the company switches it on. Three ways, all doing the same thing:
+
+1. **Connected apps** (owner and admin): a switch per event. Editors and viewers see the same page read-only, with no switch.
+2. `php artisan notify:enable-defaults {company_uuid} {platform?} {--events=a,b}`: for an operator. With no platform it switches on every catalogued event; `--events` names specific ones.
+3. By hand: a `NotifyRule` for the event name under Routing Rules.
+
+Switching an event on creates, once, the company's own copy of the default template (slug `catalogue.<event>`) and an active rule that points at it and at the company's first active email channel. It is safe to repeat. If the company already has a rule for the event it is switched back on as it is; a template that was edited is never overwritten and a channel the company chose is never replaced. Switching an event off only deactivates its rules: nothing is deleted.
+
+If the company has no active email channel yet, the rule is still created but flagged **No email channel yet**: events arrive and are recorded as `failed`, and nothing is sent. Add an email channel, then press "attach it" on the page (or run the command again).
+
+The page also shows, per event, when the company last received it and what happened to it (queued, no rule, held by a rate limit, could not be sent), so an owner can see an app is really calling. An app whose ingest secret is not configured here is marked as not connected.
+
+### Opting out
+
+A recipient who has a Dot.Notify account can switch one event type off per channel type (`NotifyPreference::setForEvent($user, 'task.due_soon', 'email', false)`; rows keep `event = ''` for the older category-wide opt-outs). The send step then marks the notification `suppressed` with the reason. `security` notices are never suppressed, and none of today's events is one. There is no screen for this yet, and email footers do not carry a signed unsubscribe link: both are out of scope for this change, so today an opt-out is recorded by an operator or a future preferences page.
+
+## Roles
+
+Access follows the team (company) role. InfoDot is the source of truth and the role is re-applied at every sign-in.
+
+| InfoDot role | Dot.Notify role | Can |
+|---|---|---|
+| owner, admin | admin (owner for the creator) | everything: create, change, toggle and delete channels, rules, templates, webhooks and schedules; use the AI template generator |
+| editor | editor | read only here: the dashboard, the notification log and the channel, template and rule lists; the write and AI controls are not shown |
+| viewer | viewer | the same read surface as an editor, nothing more |
+| anything else | viewer | an unrecognised InfoDot role gets the least powerful role, never editor |
+
+Channel credentials (the encrypted `config`), webhook signing secrets and message bodies are hidden from every model serialisation and are not rendered for any member. Moving someone to viewer in InfoDot takes effect at their next sign-in. The role matrix is in `tests/Feature/Notify/ViewerRoleMatrixTest.php`.
 
 ## Tech Stack
 
