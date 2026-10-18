@@ -58,7 +58,7 @@ class RuleManager extends Component
     #[Computed]
     public function rules()
     {
-        return NotifyRule::with(['template', 'channel'])->orderByDesc('created_at')->get();
+        return NotifyRule::with(['template', 'channel', 'team'])->orderByDesc('created_at')->get();
     }
 
     #[Computed]
@@ -76,6 +76,10 @@ class RuleManager extends Component
     public function edit(int $id): void
     {
         $rule = NotifyRule::findOrFail($id);
+
+        // Opening the form is the first step of a write, so it needs the same
+        // standing as saving it.
+        Gate::authorize('update', $rule);
 
         $this->editingId = $rule->id;
         $this->triggerEvent = $rule->trigger_event;

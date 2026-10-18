@@ -35,7 +35,7 @@ class ChannelManager extends Component
     #[Computed]
     public function channels()
     {
-        return NotifyChannel::orderBy('type')->get();
+        return NotifyChannel::with('team')->orderBy('type')->get();
     }
 
     public function addChannel(): void

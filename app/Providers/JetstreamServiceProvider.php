@@ -57,5 +57,9 @@ class JetstreamServiceProvider extends ServiceProvider
             'create',
             'update',
         ])->description('Editor users have the ability to read, create, and update.');
+
+        Jetstream::role('viewer', 'Viewer', [
+            'read',
+        ])->description('Viewers can read the dashboard, the notification log and the channel, template and rule lists. They cannot create, change, test or delete anything, and never see channel credentials or webhook secrets.');
     }
 }

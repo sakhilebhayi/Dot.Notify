@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\NotifyChannel;
 use App\Models\Team;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -96,7 +97,7 @@ class InfoDotTeamSyncTest extends TestCase
         $this->assertSame('admin', $carl->fresh()->teamRole($team->fresh())->key);
     }
 
-    public function test_a_role_this_app_does_not_have_becomes_the_least_powerful_one_it_does(): void
+    public function test_an_infodot_viewer_becomes_a_read_only_viewer_here(): void
     {
         $this->signIn('ann@acme.test', [$this->company(self::ACME, 'Acme Ltd', 'owner')], self::ACME);
         $this->signIn('vic@acme.test', [$this->company(self::ACME, 'Acme Ltd', 'viewer')], self::ACME);
@@ -104,8 +105,59 @@ class InfoDotTeamSyncTest extends TestCase
         $team = Team::where('infodot_team_uuid', self::ACME)->firstOrFail();
         $vic = User::where('email', 'vic@acme.test')->firstOrFail();
 
-        $this->assertSame('editor', $vic->teamRole($team)->key);
-        $this->assertNotSame('admin', $vic->teamRole($team)->key);
+        $this->assertSame('viewer', $vic->teamRole($team)->key);
+        $this->assertTrue($vic->hasTeamPermission($team, 'read'));
+        $this->assertFalse($vic->hasTeamPermission($team, 'create'));
+        $this->assertFalse($vic->hasTeamPermission($team, 'update'));
+        $this->assertFalse($vic->hasTeamPermission($team, 'delete'));
+    }
+
+    public function test_an_editor_who_becomes_a_viewer_in_infodot_loses_write_access_at_next_sign_in(): void
+    {
+        $this->signIn('ann@acme.test', [$this->company(self::ACME, 'Acme Ltd', 'owner')], self::ACME);
+        $this->signIn('carl@acme.test', [$this->company(self::ACME, 'Acme Ltd', 'editor')], self::ACME);
+
+        $team = Team::where('infodot_team_uuid', self::ACME)->firstOrFail();
+        $carl = User::where('email', 'carl@acme.test')->firstOrFail();
+        $this->assertTrue($carl->hasTeamPermission($team, 'update'), 'an editor writes before the change');
+
+        $this->signIn('carl@acme.test', [$this->company(self::ACME, 'Acme Ltd', 'viewer')], self::ACME);
+
+        $carl = $carl->fresh();
+        $this->assertSame('viewer', $carl->teamRole($team->fresh())->key);
+        $this->assertFalse($carl->hasTeamPermission($team->fresh(), 'create'));
+        $this->assertFalse($carl->hasTeamPermission($team->fresh(), 'update'));
+        $this->assertTrue($carl->belongsToTeam($team->fresh()), 'still a member, read-only');
+    }
+
+    public function test_an_admin_who_becomes_a_viewer_in_infodot_can_no_longer_manage_notify_resources(): void
+    {
+        $this->signIn('ann@acme.test', [$this->company(self::ACME, 'Acme Ltd', 'owner')], self::ACME);
+        $this->signIn('dee@acme.test', [$this->company(self::ACME, 'Acme Ltd', 'admin')], self::ACME);
+        $team = Team::where('infodot_team_uuid', self::ACME)->firstOrFail();
+
+        $dee = User::where('email', 'dee@acme.test')->firstOrFail();
+        $this->assertTrue($dee->can('create', [NotifyChannel::class, $team]));
+
+        $this->signIn('dee@acme.test', [$this->company(self::ACME, 'Acme Ltd', 'viewer')], self::ACME);
+
+        $this->assertFalse($dee->fresh()->can('create', [NotifyChannel::class, $team->fresh()]));
+    }
+
+    public function test_an_infodot_role_this_app_does_not_know_gets_the_least_powerful_role_not_editor(): void
+    {
+        $this->signIn('ann@acme.test', [$this->company(self::ACME, 'Acme Ltd', 'owner')], self::ACME);
+
+        foreach (['auditor', 'billing', '', 'EDITOR '] as $i => $role) {
+            $email = "who{$i}@acme.test";
+            $this->signIn($email, [$this->company(self::ACME, 'Acme Ltd', $role)], self::ACME);
+
+            $team = Team::where('infodot_team_uuid', self::ACME)->firstOrFail();
+            $person = User::where('email', $email)->firstOrFail();
+
+            $this->assertSame('viewer', $person->teamRole($team)->key, "role [{$role}]");
+            $this->assertFalse($person->hasTeamPermission($team, 'update'), "role [{$role}]");
+        }
     }
 
     public function test_a_person_removed_in_infodot_loses_the_company_here_at_next_sign_in(): void

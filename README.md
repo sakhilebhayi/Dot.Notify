@@ -57,6 +57,19 @@ Dot.Notify is the notification management platform in the InfoDot ecosystem. Tea
 - `NotifySchedule` model + recurring-send execution (table exists, unused)
 - Knowledge Pack publishing to Dot.Brain (`observation`/`insight`/`outcome`/`incident`) — see `wiki.md` for the target shape
 
+## Roles
+
+Access follows the team (company) role. InfoDot is the source of truth and the role is re-applied at every sign-in.
+
+| InfoDot role | Dot.Notify role | Can |
+|---|---|---|
+| owner, admin | admin (owner for the creator) | everything: create, change, toggle and delete channels, rules, templates, webhooks and schedules; use the AI template generator |
+| editor | editor | read only here: the dashboard, the notification log and the channel, template and rule lists; the write and AI controls are not shown |
+| viewer | viewer | the same read surface as an editor, nothing more |
+| anything else | viewer | an unrecognised InfoDot role gets the least powerful role, never editor |
+
+Channel credentials (the encrypted `config`), webhook signing secrets and message bodies are hidden from every model serialisation and are not rendered for any member. Moving someone to viewer in InfoDot takes effect at their next sign-in. The role matrix is in `tests/Feature/Notify/ViewerRoleMatrixTest.php`.
+
 ## Tech Stack
 
 | Layer | Technology |
