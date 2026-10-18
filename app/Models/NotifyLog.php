@@ -36,6 +36,7 @@ class NotifyLog extends Model
         'body_preview',
         'body',
         'notification_type',
+        'event',
         'status',
         'failure_reason',
         'attempts',

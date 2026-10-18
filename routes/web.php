@@ -78,4 +78,14 @@ Route::middleware([
             'recentBatches' => NotifyBatch::orderByDesc('created_at')->limit(5)->get(),
         ]);
     })->name('dashboard');
+
+    // Which events each Dot app can send, and which of them this company has switched on.
+    Route::get('/connected-apps', function () {
+        // Same guard as the dashboard: with no current team the team scope is a no-op.
+        if (! Auth::user()?->currentTeam) {
+            return redirect()->route('teams.create');
+        }
+
+        return view('connected-apps');
+    })->name('connected-apps');
 });

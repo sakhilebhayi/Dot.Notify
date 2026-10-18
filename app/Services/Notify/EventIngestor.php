@@ -20,18 +20,38 @@ use Throwable;
  * Reuses the team's existing rules/templates/channels: the company's active
  * rule for the event decides the template and channel. The caller never
  * supplies a template, and a channel only by naming one of ITS OWN company's
- * active channels. Rules are never created here.
+ * active channels. Rules are never created here (a company switches an event on
+ * from the "Connected apps" page; see EventEnabler).
+ *
+ * Events in the catalogue (config/notify_events.php) have their `data` filtered
+ * first: only the allowed keys survive, so nothing else is stored or rendered.
+ * Events the catalogue does not know are accepted as before, unfiltered.
  */
 class EventIngestor
 {
+    public function __construct(private readonly NotifyEventCatalogue $catalogue) {}
+
     /**
      * @param  array<string, mixed>  $data  validated request payload
      * @return array{0: NotifyInboundEvent, 1: bool} the event and whether it was a replay
      *
      * @throws UnknownChannel
+     * @throws InvalidEventData
      */
     public function ingest(Team $team, array $data): array
     {
+        $catalogued = $this->catalogue->find($data['event'], $data['platform']);
+        $owner = $this->catalogue->owner($data['event']);
+        $foreign = $owner !== null && $owner !== $data['platform'];
+        $dropped = [];
+
+        if ($catalogued) {
+            ['data' => $data['data'], 'dropped' => $dropped] = $this->catalogue->inspect($data['platform'], $data['event'], (array) ($data['data'] ?? []));
+        } elseif ($foreign) {
+            // The event belongs to another platform: nothing this caller sent is kept.
+            $data['data'] = [];
+        }
+
         $existing = $this->find($team, $data);
         if ($existing) {
             return [$existing, true];
@@ -47,7 +67,7 @@ class EventIngestor
                 'platform' => $data['platform'],
                 'idempotency_key' => $data['idempotency_key'],
                 // `sensitive` paths are relative to `data`; secret-looking keys are masked anywhere.
-                'payload' => Redactor::payload($data, array_map(fn (string $path) => 'data.'.$path, $sensitive)),
+                'payload' => Redactor::payload($data, array_map(fn (string $path) => 'data.'.$path, $sensitive)) + ($dropped === [] ? [] : ['dropped_data_keys' => $dropped]),
                 'source_event' => $data['event'],
                 'trigger_event' => $data['event'],
                 'verified_at' => now(),
@@ -58,7 +78,7 @@ class EventIngestor
             return [$this->find($team, $data), true];
         }
 
-        $this->route($event, $team, $data, $override, $sensitive);
+        $this->route($event, $team, $data, $override, $sensitive, $catalogued, $foreign ? $owner : null);
 
         return [$event->fresh(), false];
     }
@@ -94,9 +114,17 @@ class EventIngestor
     /**
      * @param  array<string, mixed>  $data
      * @param  array<int, string>  $sensitive
+     * @param  array<string, mixed>|null  $catalogued  the catalogue entry when the event is catalogued for this platform
+     * @param  string|null  $foreignOwner  the platform that owns the event when this caller is not it
      */
-    private function route(NotifyInboundEvent $event, Team $team, array $data, ?NotifyChannel $override, array $sensitive): void
+    private function route(NotifyInboundEvent $event, Team $team, array $data, ?NotifyChannel $override, array $sensitive, ?array $catalogued, ?string $foreignOwner): void
     {
+        if ($foreignOwner !== null) {
+            $this->finish($event, 'no_rule', "\"{$data['event']}\" belongs to the {$foreignOwner} platform, not {$data['platform']}; nothing was sent.");
+
+            return;
+        }
+
         $rule = NotifyRule::withoutGlobalScopes()
             ->where('team_id', $team->id)
             ->where('trigger_event', $data['event'])
@@ -133,22 +161,36 @@ class EventIngestor
         }
 
         $values = (array) ($data['data'] ?? []);
-        $fullBody = $template->render(Redactor::flatten($values));
-        $previewBody = $template->render(Redactor::flatten(Redactor::payload($values, $sensitive)));
+        $full = Redactor::flatten($values);
+        $preview = Redactor::flatten(Redactor::payload($values, $sensitive));
+
+        // A catalogued event has a known set of slots: one the caller left out renders
+        // as empty (and its line is dropped), never as a literal "{{ due_date }}".
+        foreach ($catalogued['data'] ?? [] as $key) {
+            $full[$key] ??= '';
+            $preview[$key] ??= '';
+        }
+
+        $tidy = $catalogued !== null;
+        $fullBody = $template->render($full, $tidy);
+        $previewBody = $template->render($preview, $tidy);
+        $notificationType = $catalogued['notification_type'] ?? $data['notification_type'] ?? 'transactional';
         $recipient = $data['recipient']['email'] ?? $data['recipient']['user_email'];
 
-        $log = DB::transaction(function () use ($event, $team, $rule, $channel, $template, $data, $recipient, $fullBody, $previewBody) {
+        $log = DB::transaction(function () use ($event, $team, $rule, $channel, $template, $data, $recipient, $fullBody, $previewBody, $preview, $notificationType) {
             $log = NotifyLog::withoutGlobalScopes()->create([
                 'team_id' => $team->id,
                 'channel_id' => $channel->id,
                 'template_id' => $template->id,
                 'rule_id' => $rule->id,
                 'recipient' => $recipient,
-                'subject' => $template->subject,
+                // The stored subject uses the masked values; a secret never lands here in plain text.
+                'subject' => $template->renderSubject($preview) ?: null,
                 'body_preview' => $previewBody,
                 // Keep the real text (encrypted) only when the preview had secrets masked.
                 'body' => $fullBody !== $previewBody ? $fullBody : null,
-                'notification_type' => $data['notification_type'] ?? 'transactional',
+                'notification_type' => $notificationType,
+                'event' => $data['event'],
                 'status' => 'queued',
             ]);
 

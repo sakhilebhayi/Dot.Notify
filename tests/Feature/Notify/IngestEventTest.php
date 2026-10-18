@@ -64,7 +64,7 @@ class IngestEventTest extends TestCase
         $template = NotifyTemplate::create(['team_id' => $team->id, 'name' => 'Overdue', 'subject' => 'Invoice overdue', 'body' => 'Hi {{ name }}, invoice {{ number }} is overdue.']);
 
         if ($withRule) {
-            NotifyRule::create(['team_id' => $team->id, 'template_id' => $template->id, 'channel_id' => $channel->id, 'trigger_event' => 'invoice.overdue']);
+            NotifyRule::create(['team_id' => $team->id, 'template_id' => $template->id, 'channel_id' => $channel->id, 'trigger_event' => 'invoice.reminder']);
         }
 
         return [$team->fresh(), $channel];
@@ -75,7 +75,7 @@ class IngestEventTest extends TestCase
         return array_replace_recursive([
             'platform' => 'billing',
             'company_uuid' => self::ACME,
-            'event' => 'invoice.overdue',
+            'event' => 'invoice.reminder',
             'recipient' => ['email' => 'amara@example.test'],
             'data' => ['name' => 'Amara', 'number' => 'INV-7'],
             'idempotency_key' => 'inv-7-overdue-1',

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Team;
 use App\Services\Notify\EventIngestor;
 use App\Services\Notify\IngestSignature;
+use App\Services\Notify\InvalidEventData;
 use App\Services\Notify\UnknownChannel;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -24,7 +25,7 @@ use Illuminate\Validation\Rule;
  *
  * Responses: 202 {id, status} for a new event, 200 {id, status} for a replay of
  * the same (company, platform, idempotency_key), 404 for an unknown company,
- * 422 for a bad payload or channel, 429 when the platform+company rate limit
+ * 422 for a bad payload, channel or (for a catalogued event) data, 429 when the platform+company rate limit
  * is hit. status is routed (queued for delivery), no_rule (company has no
  * active rule for the event: nothing sent, and no rule is ever created here),
  * ignored (rule rate ceiling) or failed (rule unusable).
@@ -99,6 +100,8 @@ class IngestEventController extends Controller
             [$event, $replay] = $ingestor->ingest($team, $data);
         } catch (UnknownChannel) {
             return response()->json(['error' => 'unknown_channel'], 422);
+        } catch (InvalidEventData $e) {
+            return response()->json(['error' => 'invalid_request', 'errors' => $e->errors()], 422);
         }
 
         return response()->json(['id' => $event->id, 'status' => $event->status], $replay ? 200 : 202);

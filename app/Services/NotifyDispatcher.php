@@ -107,6 +107,10 @@ class NotifyDispatcher
             return "Recipient opted out of {$type} notifications on the {$channel->type} channel.";
         }
 
+        if ($log->event && NotifyPreference::blocks($log->recipient, $type, $channel->type, $log->event)) {
+            return "Recipient opted out of {$log->event} notifications on the {$channel->type} channel.";
+        }
+
         return null;
     }
 
