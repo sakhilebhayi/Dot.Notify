@@ -132,7 +132,7 @@ class NotifyDispatcherEmailTest extends TestCase
         $this->assertSame('Unknown channel type.', $log->failure_reason);
     }
 
-    public function test_a_mail_exception_is_caught_and_recorded_as_a_failure(): void
+    public function test_a_mail_exception_is_caught_and_scheduled_for_retry(): void
     {
         Mail::shouldReceive('raw')->andThrow(new \RuntimeException('Connection refused'));
 
@@ -156,7 +156,10 @@ class NotifyDispatcherEmailTest extends TestCase
         app(NotifyDispatcher::class)->dispatch($log);
 
         $log->refresh();
-        $this->assertSame('failed', $log->status);
-        $this->assertSame('Connection refused', $log->failure_reason);
+        // A transport error might clear up: retried with backoff, not failed for good.
+        $this->assertSame('retrying', $log->status);
+        $this->assertSame('Connection refused', $log->last_error);
+        $this->assertNull($log->failure_reason);
+        $this->assertNotNull($log->next_retry_at);
     }
 }

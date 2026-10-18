@@ -15,12 +15,11 @@
             <select wire:model.live="filterStatus" class="dot-input" style="font-size:11px;padding:4px 8px;width:auto;">
                 <option value="">All statuses</option>
                 <option value="queued">Queued</option>
+                <option value="sending">Sending</option>
+                <option value="retrying">Retrying</option>
                 <option value="sent">Sent</option>
-                <option value="delivered">Delivered</option>
-                <option value="opened">Opened</option>
-                <option value="clicked">Clicked</option>
                 <option value="failed">Failed</option>
-                <option value="bounced">Bounced</option>
+                <option value="suppressed">Suppressed</option>
             </select>
         </div>
     </div>
@@ -45,7 +44,7 @@
                     <div style="font-size:12px;font-weight:600;color:#d4d4d8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $log->recipient }}</div>
                     <div style="font-size:11px;color:#52525b;">{{ $log->subject ?? 'No subject' }} · {{ $log->created_at->diffForHumans() }}</div>
                 </div>
-                <span style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:100px;flex-shrink:0;margin-left:0.5rem;{{ $log->wasDelivered() ? 'background:rgba(34,197,94,0.1);color:#22c55e;' : ($log->hasFailed() ? 'background:rgba(239,68,68,0.1);color:#ef4444;' : 'background:rgba(245,158,11,0.1);color:#f59e0b;') }}">
+                <span style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:100px;flex-shrink:0;margin-left:0.5rem;{{ $log->wasSent() ? 'background:rgba(34,197,94,0.1);color:#22c55e;' : ($log->hasFailed() ? 'background:rgba(239,68,68,0.1);color:#ef4444;' : 'background:rgba(245,158,11,0.1);color:#f59e0b;') }}">
                     {{ ucfirst($log->status) }}
                 </span>
             </div>

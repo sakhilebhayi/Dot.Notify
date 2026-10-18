@@ -8,6 +8,7 @@ use App\Models\NotifyTemplate;
 use App\Models\Team;
 use App\Rules\NoAbsenceTriggerConditions;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
@@ -104,6 +105,12 @@ class RuleManager extends Component
             abort(403, 'No active team selected.');
         }
 
+        if ($this->editingId) {
+            Gate::authorize('update', NotifyRule::findOrFail($this->editingId));
+        } else {
+            Gate::authorize('create', [NotifyRule::class, $team]);
+        }
+
         $this->validate([
             'triggerEvent' => 'required|string|max:150',
             // "nullable|json" would reject Livewire's default empty-string
@@ -165,13 +172,16 @@ class RuleManager extends Component
     public function toggleRule(int $id): void
     {
         $rule = NotifyRule::findOrFail($id);
+        Gate::authorize('update', $rule);
         $rule->update(['is_active' => ! $rule->is_active]);
         unset($this->rules);
     }
 
     public function deleteRule(int $id): void
     {
-        NotifyRule::findOrFail($id)->delete();
+        $rule = NotifyRule::findOrFail($id);
+        Gate::authorize('delete', $rule);
+        $rule->delete();
         unset($this->rules);
     }
 

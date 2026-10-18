@@ -5,6 +5,7 @@ namespace App\Livewire\Notify;
 use App\Models\NotifyChannel;
 use App\Models\Team;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
@@ -49,6 +50,8 @@ class ChannelManager extends Component
             abort(403, 'No active team selected.');
         }
 
+        Gate::authorize('create', [NotifyChannel::class, $team]);
+
         $this->validate([
             'type' => 'required|in:email,sms,push,webhook,slack,in_app',
             'name' => 'required|string|max:100',
@@ -67,13 +70,16 @@ class ChannelManager extends Component
     public function toggleChannel(int $id): void
     {
         $channel = NotifyChannel::findOrFail($id);
+        Gate::authorize('update', $channel);
         $channel->update(['is_active' => ! $channel->is_active]);
         unset($this->channels);
     }
 
     public function deleteChannel(int $id): void
     {
-        NotifyChannel::findOrFail($id)->delete();
+        $channel = NotifyChannel::findOrFail($id);
+        Gate::authorize('delete', $channel);
+        $channel->delete();
         unset($this->channels);
     }
 

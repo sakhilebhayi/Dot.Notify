@@ -107,6 +107,7 @@ class NotifyTest extends TestCase
             'sent_at' => now(),
         ]);
         $this->assertTrue($log->wasDelivered());
+        $this->assertTrue($log->wasSent());
         $this->assertFalse($log->hasFailed());
     }
 

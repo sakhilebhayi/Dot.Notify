@@ -20,7 +20,7 @@
 
 ## What is Dot.Notify?
 
-Dot.Notify is the notification management platform in the InfoDot ecosystem. Teams configure delivery channels, build message templates with AI assistance, set event-triggered routing rules, and track every notification's journey from queue to delivery — with full analytics on open and click rates.
+Dot.Notify is the notification management platform in the InfoDot ecosystem. Teams configure delivery channels, build message templates with AI assistance, set event-triggered routing rules, and track every notification from queue to send. Other Dot apps can call it over a signed server-to-server API.
 
 ## Core Features
 
@@ -28,8 +28,11 @@ Dot.Notify is the notification management platform in the InfoDot ecosystem. Tea
 - Template builder with {{ variable }} interpolation
 - AI template generation — describe the notification, get copy in seconds (falls back to a deterministic stub if no API key is configured)
 - Rule engine model (`NotifyRule`) mapping trigger events to a channel + template — no management UI yet, see Roadmap
-- Delivery log — full audit trail with status per recipient, searchable by recipient/subject and filterable by status
-- User preference management — opt-in/out per notification type
+- Delivery log — audit trail with status per recipient (queued, sending, retrying, sent, failed, suppressed), searchable by recipient/subject and filterable by status. Notify records that a channel accepted a message; it does not receive opens, clicks, bounces or inbox-delivery confirmations, and does not show them
+- Service ingest API — `POST /api/ingest/events`, signed per calling platform, idempotent, rate limited; routes through the company's existing rules, templates and channels
+- Queued delivery — retries with exponential backoff, row claim so a crash cannot double-send, opt-outs enforced
+- Secrets encrypted at rest (channel config, webhook signing secrets); outbound webhook/Slack calls block private networks
+- User preference opt-outs per notification type and channel are enforced at send time (security notices are always sent); there is no UI to edit them yet
 - Bulk batch sends with delivery rate tracking
 - Auto-generated webhook endpoint tokens (`NotifyWebhook`) — the receiving HTTP endpoint itself is not implemented yet, see Roadmap
 - In-app self-notifications for this platform's own operators (channel degraded, batch failed)
@@ -40,7 +43,7 @@ Dot.Notify is the notification management platform in the InfoDot ecosystem. Tea
 - **NotifyChannel** — configured delivery channel (email, SMS, etc.)
 - **NotifyTemplate** — message template with variable support
 - **NotifyRule** — trigger-to-channel routing rule
-- **NotifyLog** — delivery audit record per recipient
+- **NotifyLog** — delivery audit record per recipient (status, attempts, last_error, next_retry_at)
 - **NotifyPreference** — per-user opt-in/out by notification type + channel
 - **NotifyBatch** — bulk send with progress/delivery-rate tracking
 - **NotifyWebhook** — inbound webhook endpoint registration (token generation only; no receiving route yet)

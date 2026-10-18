@@ -6,6 +6,7 @@ use App\Models\NotifyTemplate;
 use App\Models\Team;
 use App\Services\AiNotifyService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
@@ -69,6 +70,8 @@ class TemplateEditor extends Component
         if (! $team) {
             abort(403, 'No active team selected.');
         }
+
+        Gate::authorize('create', [NotifyTemplate::class, $team]);
 
         $this->validate([
             'templateName' => 'required|string|max:100',

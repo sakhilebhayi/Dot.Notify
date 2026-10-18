@@ -201,7 +201,7 @@
                             ['tag' => 'Channels', 'title' => 'Multi-channel delivery', 'body' => 'Configure email, SMS, push, webhook, Slack, and in-app delivery per team, and route to whichever one fits the moment.'],
                             ['tag' => 'Templates', 'title' => 'AI-assisted templates', 'body' => 'Draft message copy with variable interpolation, reused across every rule and channel. Falls back to a usable stub if AI drafting is unavailable — it never blocks a send.'],
                             ['tag' => 'Routing', 'title' => 'Rule-based routing', 'body' => 'Map any trigger event to a template and a channel, with conditions — per team, not a global default.'],
-                            ['tag' => 'Audit', 'title' => 'Full delivery audit trail', 'body' => 'Every notification\'s journey — queued, sent, delivered, opened, clicked, or failed — logged per recipient.'],
+                            ['tag' => 'Audit', 'title' => 'Full delivery audit trail', 'body' => 'Every notification — queued, sending, retrying, sent, failed, or suppressed by an opt-out — logged per recipient with its reason and attempt count.'],
                             ['tag' => 'Inbound', 'title' => 'Signature-verified webhooks', 'body' => 'A per-webhook token plus an HMAC-SHA256 signature translate a third-party event into one of your own trigger events.'],
                             ['tag' => 'Volume', 'title' => 'Batches & schedules', 'body' => 'Bulk sends with progress tracking, plus recurring sends tied to a cron expression and timezone.'],
                         ];
@@ -236,9 +236,9 @@
                             @php
                                 $steps = [
                                     ['label' => 'Queued', 'note' => 'Handed to the pipeline'],
-                                    ['label' => 'Sent', 'note' => 'Given to the channel driver'],
-                                    ['label' => 'Delivered', 'note' => 'Channel confirmed receipt'],
-                                    ['label' => 'Opened / Clicked', 'note' => 'Recipient engaged'],
+                                    ['label' => 'Sending', 'note' => 'A worker has claimed it'],
+                                    ['label' => 'Retrying', 'note' => 'Transient failure, backing off'],
+                                    ['label' => 'Sent', 'note' => 'The channel accepted it'],
                                 ];
                             @endphp
                             @foreach ($steps as $i => $s)
@@ -252,7 +252,7 @@
                             @endforeach
                         </div>
                         <p class="mt-8 text-sm text-[var(--mist)] normal-case font-body max-w-md">
-                            A send can also branch to <span class="text-[var(--paper)]">failed</span> or <span class="text-[var(--paper)]">bounced</span>, with a recorded failure reason — that's a result, not a gap in the log.
+                            A send can also end as <span class="text-[var(--paper)]">failed</span> or <span class="text-[var(--paper)]">suppressed</span> (the recipient opted out), with a recorded reason. Dot.Notify records that the channel accepted the message; it does not track opens or clicks.
                         </p>
                     </div>
                 </div>

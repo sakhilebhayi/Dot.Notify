@@ -6,6 +6,7 @@ use App\Models\Concerns\HasTeamScope;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Validation\ValidationException;
 
 class NotifyRule extends Model
 {
@@ -62,5 +63,37 @@ class NotifyRule extends Model
         }
 
         return $this->logs()->where('created_at', '>=', now()->subHour())->count() >= $this->rate_ceiling_per_hour;
+    }
+
+    /**
+     * A rule may only point at its own team's channel and template. The
+     * Livewire form checks this too, but every other writer (tinker, a future
+     * API, an import) goes through here, so a rule can never route one team's
+     * notifications through another team's channel.
+     */
+    protected static function booted(): void
+    {
+        static::saving(function (self $rule) {
+            $checks = [
+                'channel_id' => [NotifyChannel::class, 'channel'],
+                'template_id' => [NotifyTemplate::class, 'template'],
+            ];
+
+            foreach ($checks as $column => [$model, $label]) {
+                if ($rule->{$column} === null) {
+                    continue;
+                }
+
+                if ($rule->exists && ! $rule->isDirty([$column, 'team_id'])) {
+                    continue;
+                }
+
+                $ownerTeamId = $model::withoutGlobalScopes()->whereKey($rule->{$column})->value('team_id');
+
+                if ($ownerTeamId === null || (int) $ownerTeamId !== (int) $rule->team_id) {
+                    throw ValidationException::withMessages([$column => "The selected {$label} does not belong to this team."]);
+                }
+            }
+        });
     }
 }
