@@ -98,7 +98,7 @@ class ConnectedAppsTest extends TestCase
     }
 
     #[DataProvider('roles')]
-    public function test_every_member_sees_every_platform_and_event_with_its_description(string $role): void
+    public function test_every_member_sees_every_platform_and_event_with_its_description(string $role, bool $mayManage = false): void
     {
         $this->actingAs($this->users[$role])->get('/connected-apps')
             ->assertOk()
