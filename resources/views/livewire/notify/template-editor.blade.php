@@ -1,5 +1,5 @@
-<div class="dot-card" style="padding:1.5rem;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;">
+<div class="dot-card dot-card-pad">
+    <div class="card-head">
         <h3 style="font-family:'Syne',sans-serif;font-size:0.875rem;font-weight:700;color:#f4f4f5;margin:0;">Templates</h3>
         @can('create', [\App\Models\NotifyTemplate::class, auth()->user()->currentTeam])
         <button wire:click="$toggle('showForm')" class="dot-btn dot-btn-ghost" style="font-size:12px;padding:5px 12px;">
@@ -11,7 +11,7 @@
 
     @if($showForm)
     <div style="background:rgba(251,146,60,0.05);border:1px solid rgba(251,146,60,0.15);border-radius:8px;padding:1rem;margin-bottom:1.25rem;">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:0.75rem;">
+        <div class="form-grid form-grid-2" style="margin-bottom:0.75rem;">
             <div>
                 <div style="font-size:10px;color:#52525b;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.08em;">Purpose</div>
                 <input wire:model="purpose" type="text" placeholder="Payment failed notification" class="dot-input" />
@@ -53,8 +53,8 @@
     @else
         <div style="display:grid;gap:0.4rem;">
             @foreach($this->templates as $tpl)
-            <div style="display:flex;align-items:center;justify-content:space-between;padding:0.65rem 0.75rem;background:rgba(255,255,255,0.03);border-radius:8px;">
-                <div>
+            <div class="dot-row">
+                <div class="dot-row-main">
                     <div style="font-size:12px;font-weight:600;color:#d4d4d8;">{{ $tpl->name }}</div>
                     <div style="font-size:11px;color:#52525b;">{{ ucfirst($tpl->channel_type ?? 'any') }} · Updated {{ $tpl->updated_at->diffForHumans() }}</div>
                 </div>

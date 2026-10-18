@@ -142,6 +142,20 @@ The page also shows, per event, when the company last received it and what happe
 
 A recipient who has a Dot.Notify account can switch one event type off per channel type (`NotifyPreference::setForEvent($user, 'task.due_soon', 'email', false)`; rows keep `event = ''` for the older category-wide opt-outs). The send step then marks the notification `suppressed` with the reason. `security` notices are never suppressed, and none of today's events is one. There is no screen for this yet, and email footers do not carry a signed unsubscribe link: both are out of scope for this change, so today an opt-out is recorded by an operator or a future preferences page.
 
+## Responsive shell
+
+The app shell lives in `resources/views/layouts/app.blade.php` (inline CSS and one small inline script; no build step, no extra dependency).
+
+- **Breakpoint: 860px.** At or above it the sidebar is fixed beside the content. Below it (`max-width: 859.98px`) the sidebar becomes an off-canvas drawer opened from the top bar.
+- **Hooks:** menu button `#shell-menu-button` (labelled "Menu", `aria-expanded`, `aria-controls="shell-drawer"`), drawer `#shell-drawer` (the sidebar), backdrop `#shell-backdrop`, close button `#shell-close`, top bar `.topbar`. The top bar and the content wrapper carry `data-shell-behind`: while the drawer is open they get `inert`, so focus stays in the drawer, and `html.shell-open` locks page scroll.
+- **Closing:** Escape, the backdrop, the close button, following a nav link, or the viewport growing past 860px. Focus returns to the menu button. A closed drawer is `visibility:hidden`, so it is out of the tab order and hidden from assistive tech. Motion is off under `prefers-reduced-motion`.
+- **Content offset:** `--topbar-h` is the single source for the top bar height and the content's top padding.
+- **Page helpers:** `.page` (page padding), `.kpi-grid`, `.two-col` (stacks below 1100px), `.dot-row` / `.dot-row-main` / `.dot-row-actions` (list rows that wrap), `.form-grid-2` / `.form-grid-3` (single column on phones), `.row-action` (touch size on phones).
+- **Adding a wide table:** wrap it in `<div class="table-scroll"><table>...</table></div>`. The wrapper scrolls sideways inside its own box and the page never does. Do not set fixed widths on cards or rows; use `min-width:0` and `overflow-wrap:anywhere` for long values.
+- **Team and account links** (team settings, create team, switch team, log out) are in the drawer; the old Jetstream `navigation-menu` bar is no longer rendered in this layout.
+
+Tests: `tests/Feature/ResponsiveShellTest.php` pins the markup hooks. It cannot check appearance.
+
 ## Metrics for Dot.Analytics
 
 Notify also publishes its own numbers. Once a day (03:00 UTC, `notify:publish-metrics`) it queues one signed
