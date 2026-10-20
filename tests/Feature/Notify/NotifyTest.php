@@ -39,7 +39,7 @@ class NotifyTest extends TestCase
 
     public function test_ecosystem_auth_rejects_missing_token(): void
     {
-        $this->get('/auth/ecosystem')->assertStatus(403);
+        $this->get('/auth/ecosystem')->assertStatus(303)->assertRedirect('/login');
     }
 
     public function test_notify_channel_can_be_created(): void
