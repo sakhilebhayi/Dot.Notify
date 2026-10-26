@@ -38,7 +38,7 @@
 
         /* Sidebar */
         .sidebar { position:fixed; left:0; top:0; width:var(--sidebar-w); height:100vh; height:100dvh; background:#0d0d10; border-right:1px solid rgba(255,255,255,0.06); display:flex; flex-direction:column; z-index:40; overflow:hidden; }
-        .sidebar:focus { outline:none; }
+        .sidebar:focus:not(:focus-visible) { outline:none; }
         .sidebar::before { content:''; position:absolute; top:-80px; left:-80px; width:320px; height:320px; background:radial-gradient(circle, rgba(251,146,60,0.1) 0%, transparent 65%); pointer-events:none; }
 
         .sidebar-brand { padding:20px 18px 14px; display:flex; align-items:center; gap:11px; flex-shrink:0; }
