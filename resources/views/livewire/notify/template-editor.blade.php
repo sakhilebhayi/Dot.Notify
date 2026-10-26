@@ -14,12 +14,12 @@
         <div class="form-grid form-grid-2" style="margin-bottom:0.75rem;">
             <div>
                 <div style="font-size:10px;color:#52525b;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.08em;">Purpose</div>
-                <input wire:model="purpose" type="text" placeholder="Payment failed notification" class="dot-input" />
+                <input aria-label="Payment failed notification" wire:model="purpose" type="text" placeholder="Payment failed notification" class="dot-input" />
                 @error('purpose')<p style="font-size:11px;color:#ef4444;margin-top:3px;">{{ $message }}</p>@enderror
             </div>
             <div>
                 <div style="font-size:10px;color:#52525b;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.08em;">Channel</div>
-                <select wire:model="channelType" class="dot-input">
+                <select aria-label="Channeltype" wire:model="channelType" class="dot-input">
                     <option value="email">Email</option>
                     <option value="sms">SMS</option>
                     <option value="push">Push</option>
@@ -36,7 +36,7 @@
     @if($generatedBody)
     <div style="margin-bottom:1rem;">
         <div style="font-size:10px;color:#52525b;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.08em;">Template Name</div>
-        <input wire:model="templateName" type="text" class="dot-input" placeholder="Name this template..." />
+        <input aria-label="Name this template" wire:model="templateName" type="text" class="dot-input" placeholder="Name this template..." />
     </div>
     @if($generatedSubject)
     <div style="font-size:12px;color:#71717a;margin-bottom:0.5rem;font-family:'JetBrains Mono',monospace;">Subject: {{ $generatedSubject }}</div>
