@@ -12,19 +12,19 @@
     <form wire:submit="saveRule" class="form-grid form-grid-2">
         <div>
             <div style="font-size:10px;color:#52525b;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.08em;">Trigger Event</div>
-            <input wire:model="triggerEvent" type="text" placeholder="user.signup, payment.failed, custom.*" class="dot-input" />
+            <input aria-label="user.signup, payment.failed, custom.*" wire:model="triggerEvent" type="text" placeholder="user.signup, payment.failed, custom.*" class="dot-input" />
             @error('triggerEvent')<p style="font-size:11px;color:#ef4444;margin-top:3px;">{{ $message }}</p>@enderror
         </div>
         <div>
             <div style="font-size:10px;color:#52525b;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.08em;">Active</div>
-            <select wire:model="isActive" class="dot-input">
+            <select aria-label="Isactive" wire:model="isActive" class="dot-input">
                 <option value="1">Active</option>
                 <option value="0">Inactive</option>
             </select>
         </div>
         <div>
             <div style="font-size:10px;color:#52525b;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.08em;">Template</div>
-            <select wire:model="templateId" class="dot-input">
+            <select aria-label="Templateid" wire:model="templateId" class="dot-input">
                 <option value="">Select a template…</option>
                 @foreach($this->templateOptions as $template)
                     <option value="{{ $template->id }}">{{ $template->name }}</option>
@@ -34,7 +34,7 @@
         </div>
         <div>
             <div style="font-size:10px;color:#52525b;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.08em;">Channel</div>
-            <select wire:model="channelId" class="dot-input">
+            <select aria-label="Channelid" wire:model="channelId" class="dot-input">
                 <option value="">Select a channel…</option>
                 @foreach($this->channelOptions as $channel)
                     <option value="{{ $channel->id }}">{{ $channel->name }} ({{ ucfirst($channel->type) }})</option>
@@ -44,13 +44,13 @@
         </div>
         <div class="form-span">
             <div style="font-size:10px;color:#52525b;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.08em;">Conditions (JSON, optional)</div>
-            <textarea wire:model="conditionsJson" rows="2" placeholder='{"amount_gt": 100}' class="dot-input" style="width:100%;font-family:'Space Mono',monospace;font-size:11px;"></textarea>
+            <textarea aria-label="Conditionsjson" wire:model="conditionsJson" rows="2" placeholder='{"amount_gt": 100}' class="dot-input" style="width:100%;font-family:'Space Mono',monospace;font-size:11px;"></textarea>
             <p style="font-size:10px;color:#52525b;margin:4px 0 0;">Domain-event conditions only — a condition may never read a recipient-activity field (last_login, inactive_days, etc.). See wiki.md §5.</p>
             @error('conditionsJson')<p style="font-size:11px;color:#ef4444;margin-top:3px;">{{ $message }}</p>@enderror
         </div>
         <div>
             <div style="font-size:10px;color:#52525b;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.08em;">Rate Ceiling (per hour, optional)</div>
-            <input wire:model="rateCeilingPerHour" type="number" min="1" placeholder="No ceiling" class="dot-input" />
+            <input aria-label="No ceiling" wire:model="rateCeilingPerHour" type="number" min="1" placeholder="No ceiling" class="dot-input" />
             @error('rateCeilingPerHour')<p style="font-size:11px;color:#ef4444;margin-top:3px;">{{ $message }}</p>@enderror
         </div>
         <div class="form-span">

@@ -12,7 +12,7 @@
     <form wire:submit="addChannel" class="form-grid form-grid-3">
         <div>
             <div style="font-size:10px;color:#52525b;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.08em;">Type</div>
-            <select wire:model="type" class="dot-input">
+            <select aria-label="Type" wire:model="type" class="dot-input">
                 <option value="email">Email</option>
                 <option value="sms">SMS</option>
                 <option value="push">Push</option>
@@ -24,7 +24,7 @@
         </div>
         <div>
             <div style="font-size:10px;color:#52525b;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.08em;">Name</div>
-            <input wire:model="name" type="text" placeholder="Primary Email" class="dot-input" />
+            <input aria-label="Primary Email" wire:model="name" type="text" placeholder="Primary Email" class="dot-input" />
             @error('name')<p style="font-size:11px;color:#ef4444;margin-top:3px;">{{ $message }}</p>@enderror
         </div>
         <button type="submit" class="dot-btn dot-btn-primary btn-tall">Add</button>
