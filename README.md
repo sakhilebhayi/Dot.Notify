@@ -70,6 +70,9 @@ Dot apps do not invent event names. `config/notify_events.php` (version 1) is th
 | Dot.Tasks | `task.mentioned` | user | `task_title`, `board_name`, `mentioned_by`, `url` |
 | Dot.HR | `leave.requested` | approvers | `employee_name`, `leave_type`, `start_date`, `end_date`, `days`, `url` |
 | Dot.HR | `leave.decided` | user | `leave_type`, `start_date`, `end_date`, `decision`, `decided_by`, `url` |
+| Dot.HR | `application.received` | approvers | `role_title`, `reference`, `url` |
+| Dot.HR | `application.updated` | user | `business_name`, `role_title`, `update`, `url` |
+| Dot.HR | `hr.update` | user | `business_name`, `title`, `url` |
 | Dot.Auction | `auction.outbid` | user | `auction_title`, `your_bid`, `current_price`, `currency`, `ends_at`, `url` |
 | Dot.Auction | `auction.won` | user | `auction_title`, `final_price`, `currency`, `url` |
 | Dot.Auction | `auction.sold` | user | `auction_title`, `final_price`, `currency`, `status`, `url` |

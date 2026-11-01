@@ -123,6 +123,43 @@ return [
                 ],
                 'data' => ['leave_type', 'start_date', 'end_date', 'decision', 'decided_by', 'url'],
             ],
+            // Dot.HR 2026-11-01: every other in-app notice, as the minimum — never the notice's text.
+            'application.received' => [
+                'label' => 'Application received',
+                'description' => 'Someone applied for a role. Tells the business\'s owner and administrators. The cover note and answers are never sent.',
+                'channel' => 'email',
+                'recipient' => 'approvers',
+                'notification_type' => 'transactional',
+                'template' => [
+                    'subject' => 'New application: {{ role_title }}',
+                    'body' => "Someone applied for {{ role_title }}.\n\nReference: {{ reference }}\n\nOpen the application: {{ url }}",
+                ],
+                'data' => ['role_title', 'reference', 'url'],
+            ],
+            'application.updated' => [
+                'label' => 'Application updated',
+                'description' => 'A business moved, interviewed for or decided on an application. Tells the candidate who applied. Notes about the candidate are never sent.',
+                'channel' => 'email',
+                'recipient' => 'user',
+                'notification_type' => 'transactional',
+                'template' => [
+                    'subject' => '{{ business_name }}: {{ update }}',
+                    'body' => "There is news about your application to {{ business_name }}.\n\nRole: {{ role_title }}\nUpdate: {{ update }}\n\nSee your application: {{ url }}",
+                ],
+                'data' => ['business_name', 'role_title', 'update', 'url'],
+            ],
+            'hr.update' => [
+                'label' => 'Something needs you in Dot.HR',
+                'description' => 'Any other Dot.HR notice: a review, an HR request answered, a timesheet, onboarding, training, a certificate lapsing. Only its title is sent; the detail stays in Dot.HR.',
+                'channel' => 'email',
+                'recipient' => 'user',
+                'notification_type' => 'transactional',
+                'template' => [
+                    'subject' => '{{ business_name }}: {{ title }}',
+                    'body' => "{{ title }}\n\nOpen Dot.HR to see it: {{ url }}",
+                ],
+                'data' => ['business_name', 'title', 'url'],
+            ],
         ],
 
         'auction' => [

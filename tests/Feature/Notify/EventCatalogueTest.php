@@ -26,6 +26,10 @@ class EventCatalogueTest extends TestCase
         'hr' => [
             'leave.requested' => ['employee_name', 'leave_type', 'start_date', 'end_date', 'days', 'url'],
             'leave.decided' => ['leave_type', 'start_date', 'end_date', 'decision', 'decided_by', 'url'],
+            // Exactly what Dot.HR's ForwardNoticesToNotify sends (Dot.HR, 2026-11-01).
+            'application.received' => ['role_title', 'reference', 'url'],
+            'application.updated' => ['business_name', 'role_title', 'update', 'url'],
+            'hr.update' => ['business_name', 'title', 'url'],
         ],
         'auction' => [
             'auction.outbid' => ['auction_title', 'your_bid', 'current_price', 'currency', 'ends_at', 'url'],
@@ -96,7 +100,7 @@ class EventCatalogueTest extends TestCase
         }
 
         $this->assertEqualsCanonicalizing($expected, array_keys($this->catalogue->all()));
-        $this->assertCount(16, $this->catalogue->all());
+        $this->assertCount(19, $this->catalogue->all());
         $this->assertSame(1, $this->catalogue->version());
         $this->assertSame(array_keys(self::CONTRACT), array_keys($this->catalogue->platforms()));
     }
@@ -176,11 +180,12 @@ class EventCatalogueTest extends TestCase
         $this->assertSame(['employee_name' => 'Amara', 'leave_type' => 'sick'], $clean);
     }
 
-    public function test_the_recipient_kind_is_approvers_only_for_leave_requests(): void
+    public function test_the_recipient_kind_is_approvers_only_where_someone_must_act(): void
     {
         $approvers = array_keys(array_filter($this->catalogue->all(), fn (array $e) => $e['recipient'] === 'approvers'));
 
-        $this->assertSame(['leave.requested'], $approvers);
+        // A leave request needs a decision; a new application needs the business to look at it.
+        $this->assertSame(['leave.requested', 'application.received'], $approvers);
     }
 
     public function test_an_event_is_found_only_on_the_platform_that_owns_it(): void
