@@ -47,7 +47,7 @@ class EnableDefaultsCommandTest extends TestCase
     {
         $this->artisan('notify:enable-defaults', ['team_uuid' => self::UUID])->assertSuccessful();
 
-        $this->assertCount(16, $this->enabledEvents());
+        $this->assertCount(19, $this->enabledEvents());
     }
 
     public function test_events_option_limits_it_to_the_named_events(): void
