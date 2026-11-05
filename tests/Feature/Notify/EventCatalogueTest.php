@@ -105,7 +105,7 @@ class EventCatalogueTest extends TestCase
         }
 
         $this->assertEqualsCanonicalizing($expected, array_keys($this->catalogue->all()));
-        $this->assertCount(19, $this->catalogue->all());
+        $this->assertCount(21, $this->catalogue->all());
         $this->assertSame(1, $this->catalogue->version());
         $this->assertSame(array_keys(self::CONTRACT), array_keys($this->catalogue->platforms()));
     }
@@ -189,8 +189,8 @@ class EventCatalogueTest extends TestCase
     {
         $approvers = array_keys(array_filter($this->catalogue->all(), fn (array $e) => $e['recipient'] === 'approvers'));
 
-        // A leave request needs a decision; a new application needs the business to look at it.
-        $this->assertSame(['leave.requested', 'application.received'], $approvers);
+        // A leave request and a workbook need a decision; a new application needs the business to look at it.
+        $this->assertSame(['leave.requested', 'application.received', 'sheet.approval'], $approvers);
     }
 
     public function test_an_event_is_found_only_on_the_platform_that_owns_it(): void
