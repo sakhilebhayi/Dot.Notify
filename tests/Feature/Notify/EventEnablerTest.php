@@ -252,7 +252,7 @@ class EventEnablerTest extends TestCase
 
         $states = $this->enabler->states($this->team);
 
-        $this->assertCount(19, $states);
+        $this->assertCount(21, $states);
         $this->assertSame('on', $states['task.assigned']);
         $this->assertSame('off', $states['task.due_soon']);
         $this->assertSame('off', $states['invoice.overdue']);

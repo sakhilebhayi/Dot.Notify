@@ -119,7 +119,7 @@ class ConnectedAppsTest extends TestCase
     {
         foreach (['owner', 'admin'] as $role) {
             $html = $this->actingAs($this->users[$role])->get('/connected-apps')->assertOk()->getContent();
-            $this->assertSame(19, substr_count($html, 'role="switch"'), "{$role} should get one switch per event.");
+            $this->assertSame(21, substr_count($html, 'role="switch"'), "{$role} should get one switch per event.");
         }
 
         foreach (['editor', 'viewer'] as $role) {

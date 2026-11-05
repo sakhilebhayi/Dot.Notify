@@ -296,6 +296,34 @@ return [
             ],
         ],
 
+        'sheet' => [
+            // Exactly what Dot.Sheets' ForwardNoticesToNotify sends. No comment text or cell contents leave Dot.Sheets.
+            'sheet.mention' => [
+                'label' => 'Mentioned in a workbook',
+                'description' => 'Someone mentioned a person in a comment. Tells that person.',
+                'channel' => 'email',
+                'recipient' => 'user',
+                'notification_type' => 'transactional',
+                'template' => [
+                    'subject' => '{{ title }}: {{ workbook_name }}',
+                    'body' => "{{ title }}.\n\nBusiness: {{ business_name }}\nWorkbook: {{ workbook_name }}\n\nOpen it: {{ url }}",
+                ],
+                'data' => ['business_name', 'workbook_name', 'title', 'url'],
+            ],
+            'sheet.approval' => [
+                'label' => 'Workbook waiting for approval',
+                'description' => 'Someone asked for a workbook to be approved. Tells each person who can decide.',
+                'channel' => 'email',
+                'recipient' => 'approvers',
+                'notification_type' => 'transactional',
+                'template' => [
+                    'subject' => '{{ title }}: {{ workbook_name }}',
+                    'body' => "{{ title }}.\n\nBusiness: {{ business_name }}\nWorkbook: {{ workbook_name }}\n\nOpen it: {{ url }}",
+                ],
+                'data' => ['business_name', 'workbook_name', 'title', 'url'],
+            ],
+        ],
+
     ],
 
 ];
