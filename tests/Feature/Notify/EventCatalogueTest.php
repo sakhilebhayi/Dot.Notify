@@ -47,13 +47,13 @@ class EventCatalogueTest extends TestCase
             'harvest.recorded' => ['farm_name', 'field_name', 'crop', 'quantity', 'unit', 'harvested_at', 'url'],
         ],
         // Exactly what Dot.Billing's NotifyClient::invoiceOverduePayload() sends (Dot.Billing PR #6).
+        'billing' => [
+            'invoice.overdue' => ['team_name', 'invoice_number', 'total', 'balance', 'currency', 'due_date', 'days_overdue', 'invoice_url'],
+        ],
         // Exactly what Dot.Sheets' ForwardNoticesToNotify sends.
         'sheet' => [
             'sheet.mention' => ['business_name', 'workbook_name', 'title', 'url'],
             'sheet.approval' => ['business_name', 'workbook_name', 'title', 'url'],
-        ],
-        'billing' => [
-            'invoice.overdue' => ['team_name', 'invoice_number', 'total', 'balance', 'currency', 'due_date', 'days_overdue', 'invoice_url'],
         ],
     ];
 
