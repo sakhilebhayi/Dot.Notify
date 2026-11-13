@@ -37,7 +37,8 @@
 
 return [
 
-    'version' => 1,
+    // 2: the events of platforms that have left the ecosystem were removed. No remaining event or key changed.
+    'version' => 2,
 
     // Longest string kept for any data value (longer values are cut and end in an ellipsis).
     'max_value_length' => 500,
@@ -261,38 +262,6 @@ return [
                     'body' => "Your driver application has been decided.\n\nDecision: {{ decision }}\nFleet: {{ fleet_name }}\nNote: {{ note }}\n\nSee your application: {{ url }}",
                 ],
                 'data' => ['decision', 'fleet_name', 'note', 'url'],
-            ],
-        ],
-
-        'farms' => [
-            'harvest.recorded' => [
-                'label' => 'Harvest recorded',
-                'description' => 'A harvest was recorded on a field.',
-                'channel' => 'email',
-                'recipient' => 'user',
-                'notification_type' => 'transactional',
-                'template' => [
-                    'subject' => 'Harvest recorded: {{ crop }} on {{ farm_name }}',
-                    'body' => "A harvest was recorded.\n\nFarm: {{ farm_name }}\nField: {{ field_name }}\nCrop: {{ crop }}\nQuantity: {{ quantity }} {{ unit }}\nHarvested: {{ harvested_at }}\n\nSee the harvest: {{ url }}",
-                ],
-                'data' => ['farm_name', 'field_name', 'crop', 'quantity', 'unit', 'harvested_at', 'url'],
-            ],
-        ],
-
-        'billing' => [
-            // Data keys are exactly what Dot.Billing's NotifyClient sends (Dot.Billing PR #6).
-            // Its link key is `invoice_url`, not `url`.
-            'invoice.overdue' => [
-                'label' => 'Invoice overdue',
-                'description' => 'An invoice passed its due date unpaid. Tells the company owner.',
-                'channel' => 'email',
-                'recipient' => 'user',
-                'notification_type' => 'transactional',
-                'template' => [
-                    'subject' => 'Invoice {{ invoice_number }} is overdue',
-                    'body' => "An invoice on your account is overdue.\n\nCompany: {{ team_name }}\nInvoice: {{ invoice_number }}\nDue date: {{ due_date }}\nDays overdue: {{ days_overdue }}\nTotal: {{ total }}\nBalance due: {{ balance }}\n\nView the invoice: {{ invoice_url }}",
-                ],
-                'data' => ['team_name', 'invoice_number', 'total', 'balance', 'currency', 'due_date', 'days_overdue', 'invoice_url'],
             ],
         ],
 

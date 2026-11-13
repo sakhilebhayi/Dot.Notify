@@ -107,10 +107,8 @@ class ConnectedAppsTest extends TestCase
             ->assertSeeText('Dot.HR')
             ->assertSeeText('Dot.Auction')
             ->assertSeeText('Dot.Ehail')
-            ->assertSeeText('Dot.Farms')
-            ->assertSeeText('Dot.Billing')
             ->assertSee('task.assigned')
-            ->assertSee('invoice.overdue')
+            ->assertSee('ride.expired')
             ->assertSee('leave.requested')
             ->assertSeeText('Task assigned');
     }
@@ -119,7 +117,7 @@ class ConnectedAppsTest extends TestCase
     {
         foreach (['owner', 'admin'] as $role) {
             $html = $this->actingAs($this->users[$role])->get('/connected-apps')->assertOk()->getContent();
-            $this->assertSame(19, substr_count($html, 'role="switch"'), "{$role} should get one switch per event.");
+            $this->assertSame(17, substr_count($html, 'role="switch"'), "{$role} should get one switch per event.");
         }
 
         foreach (['editor', 'viewer'] as $role) {
@@ -213,7 +211,7 @@ class ConnectedAppsTest extends TestCase
         $this->inbound('tasks', 'task.due_soon', 'no_rule', now()->subMinutes(10));
         // Another company's traffic, and a wrong-platform event of the same name, must not show up.
         $this->inbound('tasks', 'task.mentioned', 'routed', now()->subMinute(), $this->users['outsider']->currentTeam);
-        $this->inbound('billing', 'task.escalated', 'no_rule', now()->subMinute());
+        $this->inbound('hr', 'task.escalated', 'no_rule', now()->subMinute());
 
         $html = $this->actingAs($this->users['viewer'])->get('/connected-apps')->assertOk()->getContent();
         $apps = Livewire::actingAs($this->users['viewer'])->test(ConnectedApps::class)->instance()->apps();
@@ -289,7 +287,7 @@ class ConnectedAppsTest extends TestCase
     {
         $this->actingAs($this->users['viewer'])->get('/connected-apps')->assertOk()
             ->assertSee('assigned_by')
-            ->assertSee('invoice_url');
+            ->assertSee('fleet_name');
     }
 
     public function test_a_read_only_member_sees_the_no_channel_flag_but_not_the_attach_control(): void

@@ -43,13 +43,6 @@ class EventCatalogueTest extends TestCase
             'ride.expired' => ['url'],
             'driver.application_decided' => ['decision', 'fleet_name', 'note', 'url'],
         ],
-        'farms' => [
-            'harvest.recorded' => ['farm_name', 'field_name', 'crop', 'quantity', 'unit', 'harvested_at', 'url'],
-        ],
-        // Exactly what Dot.Billing's NotifyClient::invoiceOverduePayload() sends (Dot.Billing PR #6).
-        'billing' => [
-            'invoice.overdue' => ['team_name', 'invoice_number', 'total', 'balance', 'currency', 'due_date', 'days_overdue', 'invoice_url'],
-        ],
     ];
 
     private NotifyEventCatalogue $catalogue;
@@ -100,8 +93,8 @@ class EventCatalogueTest extends TestCase
         }
 
         $this->assertEqualsCanonicalizing($expected, array_keys($this->catalogue->all()));
-        $this->assertCount(19, $this->catalogue->all());
-        $this->assertSame(1, $this->catalogue->version());
+        $this->assertCount(17, $this->catalogue->all());
+        $this->assertSame(2, $this->catalogue->version());
         $this->assertSame(array_keys(self::CONTRACT), array_keys($this->catalogue->platforms()));
     }
 
@@ -191,7 +184,7 @@ class EventCatalogueTest extends TestCase
     public function test_an_event_is_found_only_on_the_platform_that_owns_it(): void
     {
         $this->assertNotNull($this->catalogue->find('task.assigned', 'tasks'));
-        $this->assertNull($this->catalogue->find('task.assigned', 'billing'));
+        $this->assertNull($this->catalogue->find('task.assigned', 'hr'));
         $this->assertNull($this->catalogue->find('task.unheard_of', 'tasks'));
         $this->assertSame('tasks', $this->catalogue->owner('task.assigned'));
         $this->assertNull($this->catalogue->owner('task.unheard_of'));
@@ -281,7 +274,7 @@ class EventCatalogueTest extends TestCase
             'another host' => ['https://evil.example/boards/1'],
             'lookalike suffix' => ['https://tasks.infodot.app.evil.example/boards/1'],
             'lookalike prefix' => ['https://eviltasks.infodot.app/boards/1'],
-            'another platform host' => ['https://billing.infodot.app/invoices/1'],
+            'another platform host' => ['https://hr.infodot.app/leave/1'],
             'userinfo trick' => ['https://tasks.infodot.app@evil.example/boards/1'],
             'userinfo with password' => ['https://user:pass@tasks.infodot.app/boards/1'],
             'backslash trick' => ['https://evil.example\\@tasks.infodot.app/'],
@@ -338,12 +331,12 @@ class EventCatalogueTest extends TestCase
         $this->assertFalse($this->catalogue->isAllowedUrl('tasks', 'https://tasks.infodot.app/boards/1'));
     }
 
-    public function test_billing_urls_are_checked_on_the_billing_host_under_its_own_key(): void
+    public function test_urls_are_checked_on_the_calling_platforms_own_host_under_its_own_key(): void
     {
-        $ok = $this->catalogue->validate('billing', 'invoice.overdue', ['invoice_url' => 'https://billing.infodot.app/invoices/7']);
-        $bad = $this->catalogue->inspect('billing', 'invoice.overdue', ['invoice_url' => 'https://tasks.infodot.app/invoices/7']);
+        $ok = $this->catalogue->validate('hr', 'hr.update', ['url' => 'https://hr.infodot.app/updates/7']);
+        $bad = $this->catalogue->inspect('hr', 'hr.update', ['url' => 'https://tasks.infodot.app/updates/7']);
 
-        $this->assertSame(['invoice_url' => 'https://billing.infodot.app/invoices/7'], $ok);
+        $this->assertSame(['url' => 'https://hr.infodot.app/updates/7'], $ok);
         $this->assertSame([], $bad['data']);
     }
 

@@ -28,7 +28,7 @@ class IngestEventTest extends TestCase
 {
     use RefreshDatabase;
 
-    private const SECRET = 'billing-ingest-secret-for-tests';
+    private const SECRET = 'finance-ingest-secret-for-tests';
 
     private const OTHER_SECRET = 'files-ingest-secret-for-tests';
 
@@ -48,7 +48,7 @@ class IngestEventTest extends TestCase
     {
         parent::setUp();
 
-        config(['notify.ingest.secrets' => ['billing' => self::SECRET, 'files' => self::OTHER_SECRET, 'tasks' => ''], 'notify.ingest.rate_limit_per_minute' => 100]);
+        config(['notify.ingest.secrets' => ['finance' => self::SECRET, 'files' => self::OTHER_SECRET, 'tasks' => ''], 'notify.ingest.rate_limit_per_minute' => 100]);
 
         [$this->acme, $this->acmeChannel] = $this->tenant(self::ACME);
         [$this->globex, $this->globexChannel] = $this->tenant(self::GLOBEX);
@@ -73,7 +73,7 @@ class IngestEventTest extends TestCase
     private function payload(array $override = []): array
     {
         return array_replace_recursive([
-            'platform' => 'billing',
+            'platform' => 'finance',
             'company_uuid' => self::ACME,
             'event' => 'invoice.reminder',
             'recipient' => ['email' => 'amara@example.test'],
@@ -107,7 +107,7 @@ class IngestEventTest extends TestCase
         $event = NotifyInboundEvent::withoutGlobalScopes()->findOrFail($response->json('id'));
         $this->assertSame('routed', $response->json('status'));
         $this->assertSame($this->acme->id, $event->team_id);
-        $this->assertSame('billing', $event->platform);
+        $this->assertSame('finance', $event->platform);
         $this->assertSame('inv-7-overdue-1', $event->idempotency_key);
 
         $log = NotifyLog::withoutGlobalScopes()->findOrFail($event->notify_log_id);
@@ -258,7 +258,7 @@ class IngestEventTest extends TestCase
 
     public function test_the_database_enforces_one_event_per_team_platform_and_key(): void
     {
-        $row = ['team_id' => $this->acme->id, 'platform' => 'billing', 'idempotency_key' => 'dup', 'payload' => '{}', 'verified_at' => now(), 'status' => 'received', 'created_at' => now(), 'updated_at' => now()];
+        $row = ['team_id' => $this->acme->id, 'platform' => 'finance', 'idempotency_key' => 'dup', 'payload' => '{}', 'verified_at' => now(), 'status' => 'received', 'created_at' => now(), 'updated_at' => now()];
         DB::table('notify_inbound_events')->insert($row);
 
         $this->expectException(UniqueConstraintViolationException::class);

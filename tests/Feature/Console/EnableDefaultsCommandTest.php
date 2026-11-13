@@ -47,7 +47,7 @@ class EnableDefaultsCommandTest extends TestCase
     {
         $this->artisan('notify:enable-defaults', ['team_uuid' => self::UUID])->assertSuccessful();
 
-        $this->assertCount(19, $this->enabledEvents());
+        $this->assertCount(17, $this->enabledEvents());
     }
 
     public function test_events_option_limits_it_to_the_named_events(): void
@@ -66,13 +66,13 @@ class EnableDefaultsCommandTest extends TestCase
 
     public function test_running_it_twice_changes_nothing_and_keeps_edited_templates(): void
     {
-        $this->artisan('notify:enable-defaults', ['team_uuid' => self::UUID, 'platform' => 'farms'])->assertSuccessful();
-        NotifyTemplate::withoutGlobalScopes()->where('team_id', $this->team->id)->update(['body' => 'Our harvest wording']);
+        $this->artisan('notify:enable-defaults', ['team_uuid' => self::UUID, '--events' => 'ride.expired'])->assertSuccessful();
+        NotifyTemplate::withoutGlobalScopes()->where('team_id', $this->team->id)->update(['body' => 'Our ride wording']);
 
-        $this->artisan('notify:enable-defaults', ['team_uuid' => self::UUID, 'platform' => 'farms'])->assertSuccessful();
+        $this->artisan('notify:enable-defaults', ['team_uuid' => self::UUID, '--events' => 'ride.expired'])->assertSuccessful();
 
         $this->assertSame(1, NotifyRule::withoutGlobalScopes()->where('team_id', $this->team->id)->count());
-        $this->assertSame('Our harvest wording', NotifyTemplate::withoutGlobalScopes()->where('team_id', $this->team->id)->sole()->body);
+        $this->assertSame('Our ride wording', NotifyTemplate::withoutGlobalScopes()->where('team_id', $this->team->id)->sole()->body);
     }
 
     public function test_an_unknown_company_fails_and_creates_nothing(): void
