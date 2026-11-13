@@ -264,7 +264,7 @@ class ViewerRoleMatrixTest extends TestCase
         foreach (['editor', 'viewer'] as $role) {
             $dashboard = $this->actingAs($this->users[$role])->get(route('dashboard'))
                 ->assertOk()
-                ->assertSee('Notification Hub')
+                ->assertSee('Make sure the right person is told.')
                 ->assertSee('Ops Mailer')
                 ->assertSee('Welcome Template')
                 ->assertSee('order.shipped')

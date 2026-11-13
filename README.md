@@ -30,7 +30,7 @@ Dot.Notify is the notification management platform in the InfoDot ecosystem. Tea
 - Rule engine model (`NotifyRule`) mapping trigger events to a channel + template — no management UI yet, see Roadmap
 - Delivery log — audit trail with status per recipient (queued, sending, retrying, sent, failed, suppressed), searchable by recipient/subject and filterable by status. Notify records that a channel accepted a message; it does not receive opens, clicks, bounces or inbox-delivery confirmations, and does not show them
 - Service ingest API — `POST /api/ingest/events`, signed per calling platform, idempotent, rate limited; routes through the company's existing rules, templates and channels
-- Event catalogue — the 16 events the Dot apps send, each with a default email and the only data keys it may carry; a company switches them on from the Connected apps page (see below)
+- Event catalogue — the 17 events the Dot apps send, each with a default email and the only data keys it may carry; a company switches them on from the Connected apps page (see below)
 - Queued delivery — retries with exponential backoff, row claim so a crash cannot double-send, opt-outs enforced
 - Secrets encrypted at rest (channel config, webhook signing secrets); outbound webhook/Slack calls block private networks
 - User preference opt-outs per notification type, and per catalogued event, on a channel are enforced at send time (security notices are always sent); there is no UI to edit them yet
@@ -60,7 +60,7 @@ Dot.Notify is the notification management platform in the InfoDot ecosystem. Tea
 
 ## Event catalogue and enabling events
 
-Dot apps do not invent event names. `config/notify_events.php` (version 1) is the one list of events the apps send to the ingest API, who each one is for, the email each starts from, and the only data keys each may carry. The calling apps are written against exactly these names and keys; to add or rename one, bump `version` and tell the calling apps first. The page **Connected apps** (`/connected-apps`) lists them for every company.
+Dot apps do not invent event names. `config/notify_events.php` (version 2) is the one list of events the apps send to the ingest API, who each one is for, the email each starts from, and the only data keys each may carry. The calling apps are written against exactly these names and keys; to add or rename one, bump `version` and tell the calling apps first. The page **Connected apps** (`/connected-apps`) lists them for every company.
 
 | App | Event | Recipient | Data keys kept |
 |---|---|---|---|
@@ -81,10 +81,8 @@ Dot apps do not invent event names. `config/notify_events.php` (version 1) is th
 | Dot.Ehail | `ride.cancelled` | user | `cancelled_by_role`, `reason`, `url` |
 | Dot.Ehail | `ride.expired` | user | `url` |
 | Dot.Ehail | `driver.application_decided` | user | `decision`, `fleet_name`, `note`, `url` |
-| Dot.Farms | `harvest.recorded` | user | `farm_name`, `field_name`, `crop`, `quantity`, `unit`, `harvested_at`, `url` |
-| Dot.Billing | `invoice.overdue` | user | `team_name`, `invoice_number`, `total`, `balance`, `currency`, `due_date`, `days_overdue`, `invoice_url` |
 
-`user` is the one person the event is about. `approvers` (leave requests only) are the people who must act on it: the calling app sends one call per approver, with that person as the recipient. Dot.Billing's link key is `invoice_url` (not `url`), because that is what its NotifyClient sends today.
+`user` is the one person the event is about. `approvers` (leave requests only) are the people who must act on it: the calling app sends one call per approver, with that person as the recipient.
 
 ### What a calling app sends
 
@@ -120,7 +118,7 @@ Rules for `data` on a catalogued event (anything not catalogued is accepted as b
 - Text has control characters and line breaks turned into spaces and is cut to 500 characters (`max_value_length`). Send nothing, or `null`, for a field you do not have: a line of the email whose fields are all empty is left out.
 - A key named `url` or ending `_url` must be an absolute `https` URL on the calling platform's own host (the host of that platform's `DOT_<KEY>_URL` in `config/ecosystem.php`, no other port than 443, no user info, at most 2048 characters). Anything else, including `javascript:`, `http:` and links to other hosts, is dropped.
 - `leave.requested` never carries a reason: there is no key for it, so one sent anyway is dropped and never stored or emailed.
-- A catalogued event is only accepted from the platform that owns it (Dot.Billing cannot send `task.assigned`); from another platform it is recorded as `no_rule` and nothing it sent is kept.
+- A catalogued event is only accepted from the platform that owns it (Dot.HR cannot send `task.assigned`); from another platform it is recorded as `no_rule` and nothing it sent is kept.
 - `notification_type` is taken from the catalogue for catalogued events (all `transactional` today); the caller's value is ignored.
 
 Responses are those in `wiki.md` (202/200/401/404/422/429). `status` is `routed` (queued for delivery), `no_rule` (the company has not switched this event on), `ignored` (the rule's hourly limit) or `failed` (the rule has no usable channel or template).
@@ -147,17 +145,21 @@ A recipient who has a Dot.Notify account can switch one event type off per chann
 
 ## Responsive shell
 
-The app shell lives in `resources/views/layouts/app.blade.php` (inline CSS and one small inline script; no build step, no extra dependency).
+The app shell's markup and its one small inline script live in `resources/views/layouts/app.blade.php`; its styles, with the design tokens and the self-hosted typefaces, live in `resources/css/notify.css`, built by Vite (`npm run build`). The design system is recorded in `DESIGN.md` (The Message Pad) and the product context in `PRODUCT.md`.
 
 - **Breakpoint: 860px.** At or above it the sidebar is fixed beside the content. Below it (`max-width: 859.98px`) the sidebar becomes an off-canvas drawer opened from the top bar.
 - **Hooks:** menu button `#shell-menu-button` (labelled "Menu", `aria-expanded`, `aria-controls="shell-drawer"`), drawer `#shell-drawer` (the sidebar), backdrop `#shell-backdrop`, close button `#shell-close`, top bar `.topbar`. The top bar and the content wrapper carry `data-shell-behind`: while the drawer is open they get `inert`, so focus stays in the drawer, and `html.shell-open` locks page scroll.
 - **Closing:** Escape, the backdrop, the close button, following a nav link, or the viewport growing past 860px. Focus returns to the menu button. A closed drawer is `visibility:hidden`, so it is out of the tab order and hidden from assistive tech. Motion is off under `prefers-reduced-motion`.
 - **Content offset:** `--topbar-h` is the single source for the top bar height and the content's top padding.
-- **Page helpers:** `.page` (page padding), `.kpi-grid`, `.two-col` (stacks below 1100px), `.dot-row` / `.dot-row-main` / `.dot-row-actions` (list rows that wrap), `.form-grid-2` / `.form-grid-3` (single column on phones), `.row-action` (touch size on phones).
+- **Page helpers:** `.page` (page padding), `.nf-section` (a ruled section), `.nf-today` (the home page's line of figures), `.two-col` (stacks below 1100px), `.dot-row` / `.dot-row-main` / `.dot-row-actions` (list rows that wrap), `.form-grid-2` / `.form-grid-3` (single column on phones), `.row-action` (touch size on phones).
 - **Adding a wide table:** wrap it in `<div class="table-scroll"><table>...</table></div>`. The wrapper scrolls sideways inside its own box and the page never does. Do not set fixed widths on cards or rows; use `min-width:0` and `overflow-wrap:anywhere` for long values.
 - **Team and account links** (team settings, create team, switch team, log out) are in the drawer; the old Jetstream `navigation-menu` bar is no longer rendered in this layout.
 
 Tests: `tests/Feature/ResponsiveShellTest.php` pins the markup hooks. It cannot check appearance.
+
+## Home page
+
+`/dashboard` is where people arrive after signing in through InfoDot. It names the person and the company and offers exactly one next step (`data-primary-action`), chosen in `routes/web.php` from what the company has really set up: no channel, add one (`/dashboard?start=channel#channels` opens the form); every channel switched off, switch one back on; no rule switched on, Connected apps; otherwise the log (`/dashboard?status=failed#log` when something failed today). An editor or viewer is never offered a step they would be refused. The latest message, today's figures and each channel's own sending history come only from the company's records. Tests: `tests/Feature/LandingExperienceTest.php`.
 
 ## Metrics for Dot.Analytics
 

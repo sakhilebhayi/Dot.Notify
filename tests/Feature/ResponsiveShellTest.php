@@ -69,6 +69,9 @@ class ResponsiveShellTest extends TestCase
     {
         $html = $this->actingAs($this->user)->get($url)->assertOk()->getContent();
 
+        // The shell's script is in the page; its styles are in the stylesheet the layout loads through Vite.
+        $html .= file_get_contents(resource_path('css/notify.css'));
+
         $this->assertStringContainsString('@media (max-width: 859.98px)', $html);
         $this->assertStringContainsString('(min-width: 860px)', $html);
 
@@ -135,7 +138,7 @@ class ResponsiveShellTest extends TestCase
 
         $response = $this->actingAs($this->user)->get('/dashboard')->assertOk();
 
-        $response->assertSee('class="kpi-grid"', false);
+        $response->assertSee('class="nf-today"', false);
         $response->assertSee('class="two-col"', false);
         $response->assertSeeInOrder(['<div class="dot-row">', 'wrap-check-recipient@example.test'], false);
         $response->assertSee('aria-label="Notifications"', false);

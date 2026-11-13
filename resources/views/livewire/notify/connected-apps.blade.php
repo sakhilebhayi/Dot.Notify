@@ -1,41 +1,42 @@
 <div>
     <style>
-        .ca-head { font-family:'Syne',sans-serif; font-size:1.5rem; font-weight:700; color:#f4f4f5; margin:0 0 .35rem; letter-spacing:-0.01em; }
-        .ca-lede { font-size:13px; color:#a1a1aa; margin:0; max-width:46rem; line-height:1.55; }
-        .ca-notice { margin:1.25rem 0 0; padding:.6rem .85rem; font-size:13px; color:#f4f4f5; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:8px; }
+        .ca-head { font-size:1.75rem; font-weight:700; color:var(--ink); margin:0 0 .35rem; letter-spacing:-0.01em; }
+        .ca-lede { font-size:0.875rem; color:var(--ink-2); margin:0; max-width:46rem; line-height:1.55; }
+        .ca-notice { margin:1.25rem 0 0; padding:.6rem .85rem; font-size:0.875rem; color:var(--ink); background:var(--sheet-2); border:1px solid var(--rule-strong); border-radius:var(--r-2); }
         .ca-notice:empty { display:none; }
         .ca-app { margin-top:1.25rem; overflow:hidden; }
-        .ca-app-head { display:flex; align-items:baseline; justify-content:space-between; gap:1rem; padding:1rem 1.25rem; border-bottom:1px solid rgba(255,255,255,0.07); }
-        .ca-app-name { font-family:'Syne',sans-serif; font-size:.95rem; font-weight:700; color:#f4f4f5; margin:0; }
-        .ca-count { font-family:'JetBrains Mono',monospace; font-size:12px; color:#a1a1aa; white-space:nowrap; }
-        .ca-offline { margin:0; padding:.7rem 1.25rem; font-size:12px; color:#f59e0b; border-bottom:1px solid rgba(255,255,255,0.07); }
-        .ca-row { display:grid; grid-template-columns:minmax(0,1fr) 15rem 11rem; gap:1rem 1.5rem; align-items:start; padding:1rem 1.25rem; border-top:1px solid rgba(255,255,255,0.07); }
+        .ca-app-head { display:flex; align-items:baseline; justify-content:space-between; gap:1rem; padding:1rem 1.25rem; border-bottom:1px solid var(--rule); }
+        .ca-app-name { font-size:1.1875rem; font-weight:700; color:var(--ink); margin:0; }
+        .ca-count { font-family:var(--font-code); font-size:0.8125rem; color:var(--ink-2); white-space:nowrap; }
+        .ca-offline { margin:0; padding:.7rem 1.25rem; font-size:0.8125rem; color:var(--warn); border-bottom:1px solid var(--rule); }
+        .ca-row { display:grid; grid-template-columns:minmax(0,1fr) 15rem 11rem; gap:1rem 1.5rem; align-items:start; padding:1rem 1.25rem; border-top:1px solid var(--rule); }
         .ca-app-head + .ca-row, .ca-offline + .ca-row { border-top:0; }
-        .ca-label { font-size:13px; font-weight:600; color:#f4f4f5; }
-        .ca-event { font-family:'JetBrains Mono',monospace; font-size:11px; color:#a1a1aa; margin-left:.5rem; }
-        .ca-desc { font-size:12px; color:#a1a1aa; margin:.2rem 0 0; line-height:1.5; }
-        .ca-meta { font-size:12px; color:#a1a1aa; line-height:1.5; }
-        .ca-meta strong { color:#d4d4d8; font-weight:600; }
+        .ca-label { font-size:0.875rem; font-weight:600; color:var(--ink); }
+        .ca-event { font-family:var(--font-code); font-size:0.8125rem; color:var(--ink-2); margin-left:.5rem; }
+        .ca-desc { font-size:0.8125rem; color:var(--ink-2); margin:.2rem 0 0; line-height:1.5; }
+        .ca-meta { font-size:0.8125rem; color:var(--ink-2); line-height:1.5; }
+        .ca-meta strong { color:var(--ink); font-weight:600; }
         .ca-switchcell { display:flex; flex-direction:column; align-items:flex-start; gap:.5rem; }
-        .ca-switchline { display:flex; align-items:center; gap:.6rem; font-size:12px; font-weight:600; color:#d4d4d8; }
-        .ca-switch { position:relative; width:38px; height:22px; padding:0; border-radius:100px; border:1px solid rgba(255,255,255,0.18); background:rgba(255,255,255,0.08); cursor:pointer; transition:background .14s,border-color .14s; flex-shrink:0; }
-        .ca-switch::after { content:''; position:absolute; top:2px; left:2px; width:16px; height:16px; border-radius:50%; background:#d4d4d8; transition:transform .14s,background .14s; }
-        .ca-switch[aria-checked="true"] { background:#fb923c; border-color:#fb923c; }
-        .ca-switch[aria-checked="true"]::after { transform:translateX(16px); background:#09090b; }
-        .ca-switch:focus-visible, .ca-link:focus-visible, .ca-details summary:focus-visible { outline:2px solid #fb923c; outline-offset:2px; }
+        .ca-switchline { display:flex; align-items:center; gap:.6rem; font-size:0.8125rem; font-weight:600; color:var(--ink); }
+        .ca-switch { position:relative; width:38px; height:22px; padding:0; border-radius:11px; border:1px solid var(--edge); background:var(--sheet-2); cursor:pointer; transition:background .14s,border-color .14s; flex-shrink:0; }
+        .ca-switch::after { content:''; position:absolute; top:2px; left:2px; width:16px; height:16px; border-radius:50%; background:var(--ink-3); transition:transform .14s,background .14s; }
+        .ca-switch[aria-checked="true"] { background:var(--pen); border-color:var(--pen); }
+        .ca-switch[aria-checked="true"]::after { transform:translateX(16px); background:var(--on-pen); }
+        .ca-switch:focus-visible, .ca-link:focus-visible, .ca-details summary:focus-visible { outline:2px solid var(--focus); outline-offset:2px; }
         .ca-switch[disabled] { opacity:.55; cursor:progress; }
-        .ca-flag { font-size:12px; color:#f59e0b; line-height:1.45; margin:0; }
-        .ca-link { background:none; border:0; padding:0; font:inherit; font-size:12px; font-weight:600; color:#fb923c; cursor:pointer; text-decoration:underline; text-underline-offset:2px; }
-        .ca-state { font-size:12px; font-weight:600; color:#d4d4d8; }
-        .ca-state-on { color:#22c55e; }
+        .ca-flag { font-size:0.8125rem; color:var(--warn); line-height:1.45; margin:0; }
+        .ca-link { background:none; border:0; padding:0; font:inherit; font-size:0.8125rem; font-weight:600; color:var(--pen); cursor:pointer; text-decoration:underline; text-underline-offset:2px; }
+        .ca-state { font-size:0.8125rem; font-weight:600; color:var(--ink); }
+        .ca-state-on { color:var(--ok); }
         .ca-details { grid-column:1 / -1; }
-        .ca-details summary { font-size:12px; color:#a1a1aa; cursor:pointer; width:fit-content; }
-        .ca-details summary:hover { color:#f4f4f5; }
-        .ca-details-body { margin-top:.6rem; display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:1rem 1.5rem; font-size:12px; color:#a1a1aa; }
-        .ca-pre { margin:.25rem 0 0; padding:.6rem .75rem; white-space:pre-wrap; font-family:'JetBrains Mono',monospace; font-size:11px; line-height:1.55; color:#d4d4d8; background:rgba(255,255,255,0.04); border-radius:6px; }
-        .ca-h { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.08em; color:#a1a1aa; }
+        .ca-details summary { font-size:0.8125rem; color:var(--ink-2); cursor:pointer; width:fit-content; }
+        .ca-details summary:hover { color:var(--ink); }
+        .ca-details-body { margin-top:.6rem; display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:1rem 1.5rem; font-size:0.8125rem; color:var(--ink-2); }
+        .ca-pre { margin:.25rem 0 0; padding:.6rem .75rem; white-space:pre-wrap; font-family:var(--font-code); font-size:0.8125rem; line-height:1.55; color:var(--ink); background:var(--sheet-2); border-radius:var(--r-1); }
+        .ca-h { font-size:0.8125rem; font-weight:700; color:var(--ink-2); }
+        .ca-h-gap { margin-top:.6rem; }
         .ca-keys { display:flex; flex-wrap:wrap; gap:.3rem; margin:.35rem 0 0; padding:0; list-style:none; }
-        .ca-keys code { font-family:'JetBrains Mono',monospace; font-size:11px; color:#d4d4d8; background:rgba(255,255,255,0.06); padding:1px 6px; border-radius:4px; }
+        .ca-keys code { font-family:var(--font-code); font-size:0.8125rem; color:var(--ink); background:var(--sheet-2); padding:1px 6px; border-radius:var(--r-1); }
         .ca-label, .ca-event, .ca-desc, .ca-meta, .ca-pre, .ca-flag { overflow-wrap:anywhere; }
         .ca-app-head { flex-wrap:wrap; }
         /* The three-column row needs room beside the 260px sidebar, so it stacks below 1100px */
@@ -44,7 +45,7 @@
             .ca-details-body { grid-template-columns:minmax(0,1fr); }
         }
         @media (max-width: 859.98px) {
-            .ca-head { font-size:1.25rem; }
+            .ca-head { font-size:1.375rem; }
             .ca-app-head, .ca-row, .ca-offline { padding-left:1rem; padding-right:1rem; }
             .ca-event { display:block; margin-left:0; margin-top:.15rem; }
             /* 44px touch target around the 38x22 switch, without changing how it looks */
@@ -133,7 +134,7 @@
                             <div>
                                 <div class="ca-h">Subject</div>
                                 <pre class="ca-pre">{{ $item['template']['subject'] }}</pre>
-                                <div class="ca-h" style="margin-top:.6rem;">Body</div>
+                                <div class="ca-h ca-h-gap">Body</div>
                                 <pre class="ca-pre">{{ $item['template']['body'] }}</pre>
                             </div>
                             <div>

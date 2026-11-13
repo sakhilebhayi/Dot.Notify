@@ -1,38 +1,28 @@
 <div class="bell-wrap" x-data @click.outside="$wire.open = false">
-    <button wire:click="toggle" class="topbar-btn" title="Notifications" aria-label="Notifications" aria-expanded="{{ $open ? 'true' : 'false' }}" style="position:relative;">
-        <span class="material-symbols-rounded" aria-hidden="true">notifications</span>
+    <button type="button" wire:click="toggle" class="topbar-btn" title="Notifications" aria-label="Notifications" aria-expanded="{{ $open ? 'true' : 'false' }}">
+        <x-icon name="bell" />
         @if($this->unreadCount > 0)
-            <span style="position:absolute;top:-2px;right:-2px;min-width:15px;height:15px;padding:0 3px;border-radius:100px;background:#ef4444;color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;line-height:1;">
-                {{ $this->unreadCount > 9 ? '9+' : $this->unreadCount }}
-            </span>
+            <span class="bell-count">{{ $this->unreadCount > 9 ? '9+' : $this->unreadCount }}</span>
         @endif
     </button>
 
     @if($open)
     <div class="bell-panel">
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:0.85rem 1rem;border-bottom:1px solid rgba(255,255,255,0.06);">
-            <span style="font-family:'Syne',sans-serif;font-size:12.5px;font-weight:700;color:#f4f4f5;">Notifications</span>
+        <div class="bell-head">
+            <span>Notifications</span>
             @if($this->unreadCount > 0)
-                <button wire:click="markAllAsRead" style="background:none;border:none;color:#fb923c;font-size:11px;font-weight:600;cursor:pointer;padding:0;">Mark all read</button>
+                <button type="button" wire:click="markAllAsRead" class="nf-linkbtn">Mark all read</button>
             @endif
         </div>
 
         @if($this->notifications->isEmpty())
-            <div style="text-align:center;padding:2rem 1rem;">
-                <span class="material-symbols-rounded" style="font-size:30px;color:#3f3f46;display:block;margin-bottom:0.5rem;">notifications_off</span>
-                <p style="font-size:0.75rem;color:#52525b;margin:0;">No notifications yet. We'll tell you here if a channel degrades or a batch fails.</p>
-            </div>
+            <p class="bell-empty">No notifications yet. We'll tell you here if a channel degrades or a batch fails.</p>
         @else
             <div>
                 @foreach($this->notifications as $notification)
-                <div role="button" tabindex="0" class="notif-row" wire:click="markAsRead('{{ $notification->id }}')" wire:keydown.enter="markAsRead('{{ $notification->id }}')" wire:keydown.space.prevent="markAsRead('{{ $notification->id }}')" style="padding:0.7rem 1rem;border-bottom:1px solid rgba(255,255,255,0.05);cursor:pointer;{{ $notification->read_at ? 'opacity:0.55;' : '' }}">
-                    <div style="display:flex;align-items:center;gap:6px;">
-                        @if(!$notification->read_at)
-                            <span style="width:6px;height:6px;border-radius:50%;background:#fb923c;flex-shrink:0;"></span>
-                        @endif
-                        <span style="font-size:12px;font-weight:600;color:#d4d4d8;">{{ $notification->data['title'] ?? 'Notification' }}</span>
-                    </div>
-                    <div style="font-size:11px;color:#71717a;margin-top:3px;line-height:1.4;">{{ $notification->data['message'] ?? '' }}</div>
+                <div role="button" tabindex="0" @class(['notif-row', 'is-read' => $notification->read_at]) wire:click="markAsRead('{{ $notification->id }}')" wire:keydown.enter="markAsRead('{{ $notification->id }}')" wire:keydown.space.prevent="markAsRead('{{ $notification->id }}')">
+                    <div class="notif-title">@unless($notification->read_at)<span class="visually-hidden">Unread: </span>@endunless{{ $notification->data['title'] ?? 'Notification' }}</div>
+                    <div class="notif-body">{{ $notification->data['message'] ?? '' }}</div>
                 </div>
                 @endforeach
             </div>
