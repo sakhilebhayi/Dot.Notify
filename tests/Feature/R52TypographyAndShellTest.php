@@ -104,15 +104,25 @@ class R52TypographyAndShellTest extends TestCase
         $this->assertStringContainsString('dot-ui/tailwind/tailwind-preset.cjs', $config);
         $this->assertStringContainsString('preflight: false', (string) file_get_contents(base_path('tailwind.jetstream.config.js')));
 
-        // The compiled sheet maps font-sans to the shared variable, so a Jetstream control cannot fall back to Arial.
+        // The preset maps font-sans to the shared variable, so a Jetstream control cannot fall back to Arial.
+        $this->assertStringContainsString("sans: ['var(--dot-font-sans)']", (string) file_get_contents(base_path('dot-ui/tailwind/tailwind-preset.cjs')));
+        $this->assertStringContainsString('plugins: []', (string) file_get_contents(base_path('tailwind.jetstream.config.js')));
+        $this->assertStringContainsString('preflight: false', (string) file_get_contents(base_path('tailwind.jetstream.config.js')));
+    }
+
+    public function test_the_built_jetstream_stylesheet_has_roboto_and_no_reset_or_forms_plugin(): void
+    {
+        // CI runs without an asset build (the suite fakes Vite); the deploy builds, and this runs wherever `npm run build` has.
         $built = collect(glob(public_path('build/assets/jetstream-*.css')))->first();
-        $this->assertNotNull($built, 'run npm run build');
+        if ($built === null) {
+            $this->markTestSkipped('run npm run build first');
+        }
+
         $builtCss = (string) file_get_contents($built);
         $this->assertStringContainsString('var(--dot-font-sans)', $builtCss);
         // No preflight and no forms plugin: the pad's own controls (the log's status select) keep their native look, as under the CDN build.
         $this->assertStringNotContainsString('appearance:none', $builtCss);
         $this->assertStringNotContainsString('button,[type=button]', $builtCss);
-        $this->assertStringContainsString('plugins: []', (string) file_get_contents(base_path('tailwind.jetstream.config.js')));
     }
 
     public function test_the_vite_inputs_are_the_ones_the_views_ask_for(): void
