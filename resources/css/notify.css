@@ -206,6 +206,9 @@ html.dark .nav-item.active { background:var(--rail-2); color:var(--rail-ink); }
 
 .content-wrap { margin-left:var(--sidebar-w); min-height:calc(100vh - var(--dot-header-offset, 56px)); min-height:calc(100dvh - var(--dot-header-offset, 56px)); }
 .content-wrap--guest { margin-left:0; }
+.nf-pagehead { max-width:80rem; margin:0 auto; padding:1.5rem 1rem 0; }
+@media (min-width: 640px) { .nf-pagehead { padding-inline:1.5rem; } }
+@media (min-width: 1024px) { .nf-pagehead { padding-inline:2rem; } }
 #main:focus { outline:none; }
 
 /* -------------------------------------------------------- Shared controls */
@@ -268,7 +271,7 @@ button.nav-item { width:100%; border:0; background:none; font-family:inherit; te
 .toolbar-search .dsr-filter { width:100%; }
 .toolbar-select { width:auto; }
 .bell-wrap { position:relative; }
-.bell-panel { position:absolute; top:calc(100% + 8px); right:0; width:340px; max-height:420px; overflow-y:auto; background:var(--sheet); border:1px solid var(--rule-strong); border-radius:var(--r-2); box-shadow:var(--lift); z-index:50; }
+.bell-panel { color:var(--ink); font-size:var(--dot-text-body-sm-size); line-height:var(--dot-text-body-sm-lh); position:absolute; top:calc(100% + 8px); right:0; width:340px; max-height:420px; overflow-y:auto; background:var(--sheet); border:1px solid var(--rule-strong); border-radius:var(--r-2); box-shadow:var(--lift); z-index:50; }
 .bell-head { display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:0.75rem 1rem; border-bottom:1px solid var(--rule); font-weight:700; }
 .bell-empty { margin:0; padding:1.5rem 1rem; color:var(--ink-2); font-size:0.875rem; }
 .notif-row { padding:0.75rem 1rem; border-bottom:1px solid var(--rule); cursor:pointer; }

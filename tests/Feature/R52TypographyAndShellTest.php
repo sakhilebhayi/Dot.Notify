@@ -188,6 +188,14 @@ class R52TypographyAndShellTest extends TestCase
         $this->assertStringContainsString('<title>Dashboard · Dot.Notify</title>', $html);
     }
 
+    public function test_a_jetstream_page_keeps_its_name_as_a_heading_now_that_the_bar_no_longer_carries_it(): void
+    {
+        $this->actingAs($this->user)->get('/user/profile')->assertOk()->assertSee('class="nf-pagehead"', false)->assertSeeInOrder(['nf-pagehead', 'Profile'], false);
+        // The pages with their own h1 print no second heading.
+        $this->actingAs($this->user)->get('/dashboard')->assertOk()->assertDontSee('nf-pagehead', false);
+        $this->actingAs($this->user)->get('/connected-apps')->assertOk()->assertDontSee('nf-pagehead', false);
+    }
+
     public function test_the_header_search_is_reachable_by_keyboard_and_the_sidebar_has_a_close_button(): void
     {
         $html = $this->actingAs($this->user)->get('/dashboard')->assertOk()->getContent();

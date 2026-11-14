@@ -161,6 +161,11 @@
     </aside>
 
     <div class="content-wrap" id="main" tabindex="-1">
+        {{-- The Jetstream pages (profile, team, tokens) name themselves in a header slot; it used to ride in the top bar, where it was
+             cut to "Pro…" on a phone. It is the page's own heading now. The pages that have their own h1 pass plain text and print none. --}}
+        @if(isset($header) && str_contains((string) $header, '<h2'))
+        <div class="nf-pagehead">{{ $header }}</div>
+        @endif
         <main>{{ $slot }}</main>
     </div>
     </div>
