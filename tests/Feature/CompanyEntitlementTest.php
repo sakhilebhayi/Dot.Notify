@@ -285,7 +285,8 @@ class CompanyEntitlementTest extends TestCase
         $this->actingAs($owner)->get(route('dashboard'))->assertOk();
 
         $this->assertSame(1, $calls, 'one call for the cache window');
-        Log::shouldHaveReceived('warning')->once()->withArgs(fn ($message) => str_contains($message, 'InfoDot entitlement check gave no answer'));
+        // The shared switcher notes a failed read in its own words as well; the check's own line is still logged once.
+        Log::shouldHaveReceived('warning')->withArgs(fn ($message) => str_contains($message, 'InfoDot entitlement check gave no answer'))->once();
     }
 
     public function test_a_failure_is_remembered_for_a_minute_and_an_answer_for_ten(): void

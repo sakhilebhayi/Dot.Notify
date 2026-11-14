@@ -129,6 +129,35 @@ html.dark {
     --lift: 0 14px 32px -8px rgb(0 0 0 / 0.6);
 }
 
+/* Host mapping for the shared Dot UI (public/dot-ui). The compact filter and the switcher follow the pad's own tokens in both
+   schemes; the package defaults sit under :where(), so a plain :root block wins in light and in html.dark alike. The filter
+   tokens are restated because the package derives them from the surface tokens on :root. */
+:root {
+    --dsr-panel: var(--sheet);
+    --dsr-hover: var(--sheet-2);
+    --dsr-rule: var(--rule);
+    --dsr-rule-strong: var(--rule-strong);
+    --dsr-text: var(--ink);
+    --dsr-text-2: var(--ink-2);
+    --dsr-text-3: var(--ink-3);
+    --dsr-radius-panel: var(--r-1);
+    --dsr-filter-radius: var(--r-1);
+    --dsr-filter-bg: var(--sheet);
+    --dsr-filter-ink: var(--ink);
+    --dsr-filter-placeholder: var(--ink-3);
+    --dsr-filter-border: var(--edge);
+    --dsr-filter-border-hover: var(--ink-2);
+    --dsr-filter-border-focus: var(--focus);
+}
+.topbar .dsw {
+    --dsw-btn-ink: var(--ink-2);
+    --dsw-btn-border: var(--edge);
+    --dsw-btn-bg: var(--sheet);
+    --dsw-btn-bg-hover: var(--sheet-2);
+    --dsw-focus: var(--focus);
+    --dsw-radius: var(--r-1);
+}
+
 *, *::before, *::after { box-sizing: border-box; }
 
 html, body { overflow-x: clip; }
@@ -251,9 +280,8 @@ button.nav-item { width:100%; border:0; background:none; font-family:inherit; te
 .form-grid-3 { grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto; align-items:end; }
 .form-span { grid-column:1 / -1; }
 .toolbar { display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap; }
-.toolbar-search { position:relative; color:var(--ink-3); }
-.toolbar-search .icon { position:absolute; left:10px; top:50%; transform:translateY(-50%); width:1rem; height:1rem; pointer-events:none; }
-.toolbar-search .dot-input { padding-left:32px; width:260px; }
+.toolbar-search { width:260px; }
+.toolbar-search .dsr-filter { width:100%; }
 .toolbar-select { width:auto; }
 .bell-wrap { position:relative; }
 .bell-count { position:absolute; top:-6px; right:-6px; min-width:18px; height:18px; padding:0 4px; border-radius:var(--r-2); background:var(--bad); color:var(--sheet); font-size:0.75rem; font-weight:700; display:flex; align-items:center; justify-content:center; line-height:1; }
@@ -385,6 +413,7 @@ html.dark .nf-tick.is-on .nf-box { border-color:var(--mark); }
 
     .topbar { left:0; padding:0 12px; gap:8px; }
     .topbar-btn { width:44px; height:44px; }
+    .topbar .dsw { --dsw-btn-height:44px; }
     .topbar-profile { display:none; }
     .content-wrap { margin-left:0; }
     .bell-wrap { position:static; }
@@ -396,11 +425,11 @@ html.dark .nf-tick.is-on .nf-box { border-color:var(--mark); }
     .form-grid-3 { align-items:stretch; }
     .toolbar { width:100%; }
     .toolbar-search { flex:1 1 12rem; }
-    .toolbar-search .dot-input { width:100%; }
+    .toolbar-search { width:auto; }
     .toolbar-select { flex:0 1 auto; }
 
     /* Form controls: 16px stops iOS zooming on focus, 44px is a comfortable touch target */
-    .dot-input, .toolbar-search .dot-input, .toolbar-select { font-size:1rem; min-height:44px; }
+    .dot-input, .toolbar-select { font-size:1rem; min-height:44px; }
     textarea.dot-input { min-height:5rem; }
     .dot-btn, .dot-btn-small { min-height:44px; min-width:44px; }
     .row-action { min-height:44px; min-width:44px; }

@@ -28,6 +28,13 @@
     </script>
     {{-- The Message Pad (DESIGN.md): tokens, self-hosted typefaces, the shell and the home page. --}}
     @vite(['resources/css/notify.css'])
+    {{-- Shared Dot UI (platform switcher, compact filter), served from this site's own public/dot-ui: no CDN. Loaded after the
+         app stylesheet so that stylesheet's host mapping block decides the surface colours. --}}
+    <link rel="stylesheet" href="{{ asset('dot-ui/css/dot-fonts.css') }}">
+    <link rel="stylesheet" href="{{ asset('dot-ui/css/dot-tokens.css') }}">
+    <link rel="stylesheet" href="{{ asset('dot-ui/css/dot-search.css') }}">
+    <link rel="stylesheet" href="{{ asset('dot-ui/css/dot-switcher-fonts.css') }}">
+    <link rel="stylesheet" href="{{ asset('dot-ui/css/dot-switcher.css') }}">
     @livewireStyles
     {{-- No stand-alone Alpine here: Livewire 3 bundles and starts its own (@livewireScripts). A second copy
          replaces window.Alpine and breaks every Livewire re-render ('Alpine.cloneNode is not a function'). --}}
@@ -129,6 +136,7 @@
         </div>
         @auth
         <span class="topbar-team">{{ Auth::user()->currentTeam->name ?? 'Personal' }}</span>
+        <x-dot.switcher platform="notify" :company="Auth::user()->currentTeam?->infodot_team_uuid" :company-name="Auth::user()->currentTeam?->name" logos="/dot-ui/img/platforms" />
         <livewire:notify.notification-bell />
         @endauth
         <button type="button" id="theme-toggle" class="topbar-btn" title="Toggle dark mode" aria-label="Toggle dark mode">
@@ -146,6 +154,7 @@
 
     @stack('modals')
     @livewireScripts
+    <script src="{{ asset('dot-ui/js/dot-switcher.js') }}" defer></script>
 
     <script>
         // Theme toggle: flips the scheme and remembers the choice on this device.
