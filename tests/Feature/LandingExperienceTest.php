@@ -118,8 +118,10 @@ class LandingExperienceTest extends TestCase
     {
         $response = $this->landing($role);
 
-        $response->assertSeeText('Make sure the right person is told.');
-        $response->assertSeeText('Welcome, '.explode(' ', $this->people[$role]->name)[0].'.');
+        // R-51: the headline is the state, not a marketing line; the welcome paragraph is gone.
+        $response->assertDontSeeText('Make sure the right person is told.');
+        $response->assertDontSeeText('Welcome, ');
+        $response->assertSee('<h1 class="nf-title">', false);
         $response->assertSeeText('Khanya Logistics');
         $response->assertSee('src="'.asset('images/logo.png').'" alt="Dot.Notify"', false);
         $response->assertSee('src="'.asset('images/logo-light.png').'" alt="Dot.Notify"', false);
@@ -272,7 +274,8 @@ class LandingExperienceTest extends TestCase
         $response->assertSeeText('No routing rules yet.');
         $response->assertDontSee('class="nf-ticks"', false);
 
-        $this->assertSame(['0', '0', '0', '0', '0'], $this->figures($response));
+        // Before anything is sent the record shows only what applies: channels and rules.
+        $this->assertSame(['0', '0'], $this->figures($response));
     }
 
     public function test_every_figure_on_the_page_comes_from_the_companys_own_records(): void
@@ -297,8 +300,9 @@ class LandingExperienceTest extends TestCase
 
         $response = $this->landing('viewer');
 
-        // sent today, failed today, being retried, held back in 30 days, channels on (of 2)
-        $this->assertSame(['3', '1', '2', '1', '1 of 2'], $this->figures($response));
+        // sent today, failed today, being retried, held back in 30 days, channels on (of 2), rules on
+        // plus the rules switched on (one)
+        $this->assertSame(['3', '1', '2', '1', '1 of 2', '1'], $this->figures($response));
         $response->assertSeeText('3 sent, the last');
         $response->assertSeeText('Email. Nothing sent through it yet.');
         $response->assertDontSee('Not Ours');
@@ -344,7 +348,7 @@ class LandingExperienceTest extends TestCase
     {
         $response = $this->landing('owner');
 
-        foreach (['Notification Log', 'Recent Batches', 'Channels', 'Templates', 'Routing Rules'] as $heading) {
+        foreach (['Notification log', 'Recent batches', 'Channels', 'Templates', 'Routing rules', 'The record', 'Selected message'] as $heading) {
             $response->assertSeeText($heading);
         }
 

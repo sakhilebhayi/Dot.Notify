@@ -9,6 +9,7 @@ use App\Models\NotifyChannel;
 use App\Models\NotifyLog;
 use App\Models\NotifyRule;
 use App\Models\NotifyTemplate;
+use App\Support\DashboardAttention;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
@@ -122,8 +123,6 @@ Route::middleware([
             // ?start=channel opens the add-channel form (the "Add a channel" step), for people allowed to use it.
             'openChannelForm' => $canManage && request()->query('start') === 'channel',
             'activeRules' => $activeRules,
-            // The newest message this company handed to a channel or tried to, whatever became of it.
-            'latestLog' => NotifyLog::with('channel')->latest()->latest('id')->first(),
             'lastSentAt' => NotifyLog::where('status', 'sent')->max('sent_at'),
             'infodotUrl' => rtrim((string) config('ecosystem.platforms.infodot.url'), '/'),
             'activeChannels' => $activeChannels,
@@ -131,6 +130,8 @@ Route::middleware([
             'sentToday' => $sentToday,
             'failedToday' => $failedToday,
             'retrying' => NotifyLog::where('status', 'retrying')->count(),
+            // R-51: what is really wrong right now (two of these are new reads, both company-scoped).
+            'attention' => DashboardAttention::items($failedToday),
             'suppressed30d' => NotifyLog::where('status', 'suppressed')->where('created_at', '>=', now()->subDays(30))->count(),
             'templateCount' => NotifyTemplate::count(),
             'recentBatches' => NotifyBatch::orderByDesc('created_at')->limit(5)->get(),

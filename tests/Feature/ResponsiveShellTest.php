@@ -139,8 +139,8 @@ class ResponsiveShellTest extends TestCase
         $response = $this->actingAs($this->user)->get('/dashboard')->assertOk();
 
         $response->assertSee('class="nf-today"', false);
-        $response->assertSee('class="two-col"', false);
-        $response->assertSeeInOrder(['<div class="dot-row">', 'wrap-check-recipient@example.test'], false);
+        $response->assertSee('class="nf-lower"', false);
+        $response->assertSeeInOrder(['<table class="nf-table"', 'class="row-break nf-row-title"', 'wrap-check-recipient@example.test'], false);
         $response->assertSee('aria-label="Notifications"', false);
         $response->assertSee('aria-label="Toggle dark mode"', false);
     }

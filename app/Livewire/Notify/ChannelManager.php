@@ -102,8 +102,23 @@ class ChannelManager extends Component
         unset($this->channels);
     }
 
+    public ?int $confirmingDeleteId = null;
+
+    public function confirmDelete(int $id): void
+    {
+        $channel = NotifyChannel::findOrFail($id);
+        Gate::authorize('delete', $channel);
+        $this->confirmingDeleteId = $channel->id;
+    }
+
+    public function cancelDelete(): void
+    {
+        $this->confirmingDeleteId = null;
+    }
+
     public function deleteChannel(int $id): void
     {
+        $this->confirmingDeleteId = null;
         $channel = NotifyChannel::findOrFail($id);
         Gate::authorize('delete', $channel);
         $channel->delete();
