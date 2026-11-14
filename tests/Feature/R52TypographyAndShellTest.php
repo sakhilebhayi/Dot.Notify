@@ -107,7 +107,12 @@ class R52TypographyAndShellTest extends TestCase
         // The compiled sheet maps font-sans to the shared variable, so a Jetstream control cannot fall back to Arial.
         $built = collect(glob(public_path('build/assets/jetstream-*.css')))->first();
         $this->assertNotNull($built, 'run npm run build');
-        $this->assertStringContainsString('var(--dot-font-sans)', (string) file_get_contents($built));
+        $builtCss = (string) file_get_contents($built);
+        $this->assertStringContainsString('var(--dot-font-sans)', $builtCss);
+        // No preflight and no forms plugin: the pad's own controls (the log's status select) keep their native look, as under the CDN build.
+        $this->assertStringNotContainsString('appearance:none', $builtCss);
+        $this->assertStringNotContainsString('button,[type=button]', $builtCss);
+        $this->assertStringContainsString('plugins: []', (string) file_get_contents(base_path('tailwind.jetstream.config.js')));
     }
 
     public function test_the_vite_inputs_are_the_ones_the_views_ask_for(): void
