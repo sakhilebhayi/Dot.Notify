@@ -111,6 +111,9 @@ class ResponsiveShellTest extends TestCase
             // Its root element and its hamburger/responsive menu were hidden behind the fixed bars but still took 64px of flow.
             ->assertDontSee('bg-white dark:bg-gray-800 border-b border-gray-100', false)
             ->assertDontSee('Responsive Navigation Menu', false);
+
+        // The unused stock file is deleted, not just not rendered (R-52 audit item 8).
+        $this->assertFileDoesNotExist(resource_path('views/navigation-menu.blade.php'));
     }
 
     public function test_the_drawer_carries_the_account_links_the_old_nav_bar_held(): void
