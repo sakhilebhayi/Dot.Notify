@@ -1,91 +1,89 @@
-<div class="dot-card dot-card-pad">
+<div>
     <div class="card-head">
-        <h3 style="font-family:'Syne',sans-serif;font-size:0.875rem;font-weight:700;color:#f4f4f5;margin:0;">Routing Rules</h3>
+        <div>
+            <h2 class="nf-h2">Routing Rules</h2>
+            <p class="nf-sub">A rule sends one template through one channel when an event arrives.</p>
+        </div>
         @can('create', [\App\Models\NotifyRule::class, auth()->user()->currentTeam])
-        <button wire:click="{{ $showForm ? 'cancelEdit' : '$toggle(\'showForm\')' }}" class="dot-btn dot-btn-ghost" style="font-size:12px;padding:5px 12px;">
+        <button type="button" wire:click="{{ $showForm ? 'cancelEdit' : '$toggle(\'showForm\')' }}" class="dot-btn dot-btn-ghost">
             {{ $showForm ? 'Cancel' : '+ Add Rule' }}
         </button>
         @endcan
     </div>
 
     @if($showForm)
-    <form wire:submit="saveRule" class="form-grid form-grid-2">
-        <div>
-            <div style="font-size:10px;color:#52525b;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.08em;">Trigger Event</div>
-            <input aria-label="user.signup, payment.failed, custom.*" wire:model="triggerEvent" type="text" placeholder="user.signup, payment.failed, custom.*" class="dot-input" />
-            @error('triggerEvent')<p style="font-size:11px;color:#ef4444;margin-top:3px;">{{ $message }}</p>@enderror
-        </div>
-        <div>
-            <div style="font-size:10px;color:#52525b;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.08em;">Active</div>
-            <select aria-label="Isactive" wire:model="isActive" class="dot-input">
-                <option value="1">Active</option>
-                <option value="0">Inactive</option>
-            </select>
-        </div>
-        <div>
-            <div style="font-size:10px;color:#52525b;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.08em;">Template</div>
-            <select aria-label="Templateid" wire:model="templateId" class="dot-input">
-                <option value="">Select a template…</option>
-                @foreach($this->templateOptions as $template)
-                    <option value="{{ $template->id }}">{{ $template->name }}</option>
-                @endforeach
-            </select>
-            @error('templateId')<p style="font-size:11px;color:#ef4444;margin-top:3px;">{{ $message }}</p>@enderror
-        </div>
-        <div>
-            <div style="font-size:10px;color:#52525b;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.08em;">Channel</div>
-            <select aria-label="Channelid" wire:model="channelId" class="dot-input">
-                <option value="">Select a channel…</option>
-                @foreach($this->channelOptions as $channel)
-                    <option value="{{ $channel->id }}">{{ $channel->name }} ({{ ucfirst($channel->type) }})</option>
-                @endforeach
-            </select>
-            @error('channelId')<p style="font-size:11px;color:#ef4444;margin-top:3px;">{{ $message }}</p>@enderror
-        </div>
-        <div class="form-span">
-            <div style="font-size:10px;color:#52525b;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.08em;">Conditions (JSON, optional)</div>
-            <textarea aria-label="Conditionsjson" wire:model="conditionsJson" rows="2" placeholder='{"amount_gt": 100}' class="dot-input" style="width:100%;font-family:'Space Mono',monospace;font-size:11px;"></textarea>
-            <p style="font-size:10px;color:#52525b;margin:4px 0 0;">Domain-event conditions only — a condition may never read a recipient-activity field (last_login, inactive_days, etc.). See wiki.md §5.</p>
-            @error('conditionsJson')<p style="font-size:11px;color:#ef4444;margin-top:3px;">{{ $message }}</p>@enderror
-        </div>
-        <div>
-            <div style="font-size:10px;color:#52525b;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.08em;">Rate Ceiling (per hour, optional)</div>
-            <input aria-label="No ceiling" wire:model="rateCeilingPerHour" type="number" min="1" placeholder="No ceiling" class="dot-input" />
-            @error('rateCeilingPerHour')<p style="font-size:11px;color:#ef4444;margin-top:3px;">{{ $message }}</p>@enderror
-        </div>
-        <div class="form-span">
-            <button type="submit" class="dot-btn dot-btn-primary btn-tall">{{ $editingId ? 'Update Rule' : 'Add Rule' }}</button>
+    <form wire:submit="saveRule" class="nf-form">
+        <div class="form-grid form-grid-2">
+            <div>
+                <label class="nf-label" for="rule-event">Trigger Event</label>
+                <input id="rule-event" wire:model="triggerEvent" type="text" placeholder="user.signup, payment.failed, custom.*" class="dot-input dot-input-code" @error('triggerEvent') aria-invalid="true" @enderror />
+                @error('triggerEvent')<p class="nf-error">{{ $message }}</p>@enderror
+            </div>
+            <div>
+                <label class="nf-label" for="rule-active">Active</label>
+                <select id="rule-active" wire:model="isActive" class="dot-input">
+                    <option value="1">Active</option>
+                    <option value="0">Inactive</option>
+                </select>
+            </div>
+            <div>
+                <label class="nf-label" for="rule-template">Template</label>
+                <select id="rule-template" wire:model="templateId" class="dot-input" @error('templateId') aria-invalid="true" @enderror>
+                    <option value="">Select a template…</option>
+                    @foreach($this->templateOptions as $template)
+                        <option value="{{ $template->id }}">{{ $template->name }}</option>
+                    @endforeach
+                </select>
+                @error('templateId')<p class="nf-error">{{ $message }}</p>@enderror
+            </div>
+            <div>
+                <label class="nf-label" for="rule-channel">Channel</label>
+                <select id="rule-channel" wire:model="channelId" class="dot-input" @error('channelId') aria-invalid="true" @enderror>
+                    <option value="">Select a channel…</option>
+                    @foreach($this->channelOptions as $channel)
+                        <option value="{{ $channel->id }}">{{ $channel->name }} ({{ ucfirst($channel->type) }})</option>
+                    @endforeach
+                </select>
+                @error('channelId')<p class="nf-error">{{ $message }}</p>@enderror
+            </div>
+            <div class="form-span">
+                <label class="nf-label" for="rule-conditions">Conditions (JSON, optional)</label>
+                <textarea id="rule-conditions" wire:model="conditionsJson" rows="2" placeholder='{"amount_gt": 100}' class="dot-input dot-input-code" @error('conditionsJson') aria-invalid="true" @enderror></textarea>
+                <p class="nf-help">Domain-event conditions only — a condition may never read a recipient-activity field (last_login, inactive_days, etc.). See wiki.md §5.</p>
+                @error('conditionsJson')<p class="nf-error">{{ $message }}</p>@enderror
+            </div>
+            <div>
+                <label class="nf-label" for="rule-ceiling">Rate Ceiling (per hour, optional)</label>
+                <input id="rule-ceiling" wire:model="rateCeilingPerHour" type="number" min="1" placeholder="No ceiling" class="dot-input" @error('rateCeilingPerHour') aria-invalid="true" @enderror />
+                @error('rateCeilingPerHour')<p class="nf-error">{{ $message }}</p>@enderror
+            </div>
+            <div class="form-span">
+                <button type="submit" class="dot-btn dot-btn-primary btn-tall" wire:loading.attr="disabled" wire:target="saveRule">{{ $editingId ? 'Update Rule' : 'Add Rule' }}</button>
+            </div>
         </div>
     </form>
     @endif
 
     @if($this->rules->isEmpty())
-        <div style="text-align:center;padding:1.5rem 0;">
-            <p style="font-size:0.8rem;color:#52525b;margin:0;">No routing rules yet. A rule maps a trigger event to a template + channel.</p>
-        </div>
+        <p class="nf-empty">No routing rules yet. A rule maps a trigger event to a template + channel.</p>
     @else
-        <div style="display:grid;gap:0.4rem;">
+        <div class="nf-rows">
             @foreach($this->rules as $rule)
             <div class="dot-row">
                 <div class="dot-row-main">
-                    <div class="row-break" style="font-size:12px;font-weight:600;color:#d4d4d8;font-family:'Space Mono',monospace;">{{ $rule->trigger_event }}</div>
-                    <div style="font-size:11px;color:#52525b;">
-                        {{ $rule->template->name ?? 'deleted template' }} → {{ $rule->channel->name ?? 'deleted channel' }} ({{ ucfirst($rule->channel->type ?? '?') }})
-                        @if($rule->rate_ceiling_per_hour)
-                            · capped at {{ $rule->rate_ceiling_per_hour }}/hr
-                        @endif
+                    <div class="row-break nf-row-title nf-code">{{ $rule->trigger_event }}</div>
+                    <div class="row-break nf-row-meta">
+                        Sends {{ $rule->template->name ?? 'deleted template' }} through {{ $rule->channel->name ?? 'deleted channel' }} ({{ ucfirst($rule->channel->type ?? '?') }}){{ $rule->rate_ceiling_per_hour ? ', capped at '.$rule->rate_ceiling_per_hour.' an hour' : '' }}.
                     </div>
                 </div>
                 <div class="dot-row-actions">
-                    <span style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:100px;{{ $rule->is_active ? 'background:rgba(34,197,94,0.1);color:#22c55e;' : 'background:rgba(255,255,255,0.06);color:#71717a;' }}">
-                        {{ $rule->is_active ? 'Active' : 'Inactive' }}
-                    </span>
+                    <x-status :kind="$rule->is_active ? 'on' : 'off'" :label="$rule->is_active ? 'Active' : 'Inactive'" />
                     @can('update', $rule)
-                    <button wire:click="edit({{ $rule->id }})" class="dot-btn dot-btn-ghost" style="font-size:11px;padding:3px 8px;">Edit</button>
-                    <button wire:click="toggleRule({{ $rule->id }})" class="dot-btn dot-btn-ghost" style="font-size:11px;padding:3px 8px;">Toggle</button>
+                    <button type="button" wire:click="edit({{ $rule->id }})" class="dot-btn dot-btn-ghost dot-btn-small" aria-label="Edit {{ $rule->trigger_event }}">Edit</button>
+                    <button type="button" wire:click="toggleRule({{ $rule->id }})" class="dot-btn dot-btn-ghost dot-btn-small" aria-label="Toggle {{ $rule->trigger_event }}">Toggle</button>
                     @endcan
                     @can('delete', $rule)
-                    <button wire:click="deleteRule({{ $rule->id }})" class="row-action" style="background:none;border:none;color:#52525b;cursor:pointer;font-size:11px;padding:3px 8px;">Remove</button>
+                    <button type="button" wire:click="deleteRule({{ $rule->id }})" class="row-action" aria-label="Remove {{ $rule->trigger_event }}">Remove</button>
                     @endcan
                 </div>
             </div>

@@ -1,64 +1,69 @@
-<div class="dot-card dot-card-pad">
+<div>
     <div class="card-head">
-        <h3 style="font-family:'Syne',sans-serif;font-size:0.875rem;font-weight:700;color:#f4f4f5;margin:0;">Templates</h3>
+        <h2 class="nf-h2">Templates</h2>
         @can('create', [\App\Models\NotifyTemplate::class, auth()->user()->currentTeam])
-        <button wire:click="$toggle('showForm')" class="dot-btn dot-btn-ghost" style="font-size:12px;padding:5px 12px;">
-            <span class="material-symbols-rounded" style="font-size:14px;">auto_awesome</span>
+        <button type="button" wire:click="$toggle('showForm')" class="dot-btn dot-btn-ghost">
+            <x-icon name="draft" />
             {{ $showForm ? 'Cancel' : 'AI Generate' }}
         </button>
         @endcan
     </div>
 
     @if($showForm)
-    <div style="background:rgba(251,146,60,0.05);border:1px solid rgba(251,146,60,0.15);border-radius:8px;padding:1rem;margin-bottom:1.25rem;">
-        <div class="form-grid form-grid-2" style="margin-bottom:0.75rem;">
+    <div class="nf-form">
+        <div class="form-grid form-grid-2">
             <div>
-                <div style="font-size:10px;color:#52525b;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.08em;">Purpose</div>
-                <input aria-label="Payment failed notification" wire:model="purpose" type="text" placeholder="Payment failed notification" class="dot-input" />
-                @error('purpose')<p style="font-size:11px;color:#ef4444;margin-top:3px;">{{ $message }}</p>@enderror
+                <label class="nf-label" for="template-purpose">Purpose</label>
+                <input id="template-purpose" wire:model="purpose" type="text" placeholder="Payment failed notification" class="dot-input" @error('purpose') aria-invalid="true" @enderror />
+                @error('purpose')<p class="nf-error">{{ $message }}</p>@enderror
             </div>
             <div>
-                <div style="font-size:10px;color:#52525b;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.08em;">Channel</div>
-                <select aria-label="Channeltype" wire:model="channelType" class="dot-input">
+                <label class="nf-label" for="template-channel">Channel</label>
+                <select id="template-channel" wire:model="channelType" class="dot-input">
                     <option value="email">Email</option>
                     <option value="sms">SMS</option>
                     <option value="push">Push</option>
                     <option value="slack">Slack</option>
                 </select>
             </div>
+            <div class="form-span">
+                <button type="button" wire:click="generate" class="dot-btn dot-btn-primary btn-tall" wire:loading.attr="disabled" wire:target="generate">
+                    <span wire:loading.remove wire:target="generate">Generate with AI</span>
+                    <span wire:loading wire:target="generate">Generating...</span>
+                </button>
+            </div>
         </div>
-        <button wire:click="generate" class="dot-btn dot-btn-primary" style="font-size:12px;" wire:loading.attr="disabled">
-            <span wire:loading.remove>Generate with AI</span>
-            <span wire:loading>Generating...</span>
-        </button>
-    </div>
 
-    @if($generatedBody)
-    <div style="margin-bottom:1rem;">
-        <div style="font-size:10px;color:#52525b;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.08em;">Template Name</div>
-        <input aria-label="Name this template" wire:model="templateName" type="text" class="dot-input" placeholder="Name this template..." />
+        @if($generatedBody)
+        <div class="form-grid">
+            <div>
+                <label class="nf-label" for="template-name">Template Name</label>
+                <input id="template-name" wire:model="templateName" type="text" class="dot-input" placeholder="Name this template..." @error('templateName') aria-invalid="true" @enderror />
+                @error('templateName')<p class="nf-error">{{ $message }}</p>@enderror
+            </div>
+            <div>
+                @if($generatedSubject)
+                <p class="nf-draft-subject">Subject: {{ $generatedSubject }}</p>
+                @endif
+                <div class="nf-draft">{{ $generatedBody }}</div>
+                <button type="button" wire:click="saveTemplate" class="dot-btn dot-btn-primary btn-tall" wire:loading.attr="disabled" wire:target="saveTemplate">Save Template</button>
+            </div>
+        </div>
+        @endif
     </div>
-    @if($generatedSubject)
-    <div style="font-size:12px;color:#71717a;margin-bottom:0.5rem;font-family:'JetBrains Mono',monospace;">Subject: {{ $generatedSubject }}</div>
-    @endif
-    <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:0.75rem;font-size:12px;color:#a1a1aa;white-space:pre-line;margin-bottom:0.75rem;">{{ $generatedBody }}</div>
-    <button wire:click="saveTemplate" class="dot-btn dot-btn-primary" style="font-size:12px;">Save Template</button>
-    @endif
     @endif
 
     @if($this->templates->isEmpty())
-        <div style="text-align:center;padding:1.5rem 0;">
-            <p style="font-size:0.8rem;color:#52525b;margin:0;">No templates yet.@can('create', [\App\Models\NotifyTemplate::class, auth()->user()->currentTeam]) Use AI to generate your first one.@endcan</p>
-        </div>
+        <p class="nf-empty">No templates yet.@can('create', [\App\Models\NotifyTemplate::class, auth()->user()->currentTeam]) Use AI to generate your first one.@endcan</p>
     @else
-        <div style="display:grid;gap:0.4rem;">
+        <div class="nf-rows">
             @foreach($this->templates as $tpl)
             <div class="dot-row">
                 <div class="dot-row-main">
-                    <div style="font-size:12px;font-weight:600;color:#d4d4d8;">{{ $tpl->name }}</div>
-                    <div style="font-size:11px;color:#52525b;">{{ ucfirst($tpl->channel_type ?? 'any') }} · Updated {{ $tpl->updated_at->diffForHumans() }}</div>
+                    <div class="row-break nf-row-title">{{ $tpl->name }}</div>
+                    <div class="nf-row-meta">{{ ucfirst($tpl->channel_type ?? 'any') }}, updated {{ $tpl->updated_at->diffForHumans() }}</div>
                 </div>
-                <span style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:100px;background:rgba(251,146,60,0.1);color:#fb923c;">{{ $tpl->is_active ? 'Active' : 'Inactive' }}</span>
+                <x-status :kind="$tpl->is_active ? 'on' : 'off'" :label="$tpl->is_active ? 'Active' : 'Inactive'" />
             </div>
             @endforeach
         </div>

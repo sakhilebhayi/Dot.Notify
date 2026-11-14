@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Http\Middleware\EnsureCompanyEntitled;
 use App\Models\NotifyChannel;
 use App\Models\NotifyRule;
 use App\Models\NotifySchedule;
@@ -18,6 +19,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
+use Livewire\Livewire;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -37,6 +39,9 @@ class AppServiceProvider extends ServiceProvider
         // /up answered 200 whenever PHP booted, even with the database down. The framework dispatches DiagnosingHealth
         // before it renders the page: a failing query turns the answer into a 500 (the exception text is never shown).
         Event::listen(DiagnosingHealth::class, fn () => DB::select('select 1'));
+
+        // R-50: Livewire updates from a page in the signed-in area carry that page's entitlement check with them.
+        Livewire::addPersistentMiddleware([EnsureCompanyEntitled::class]);
 
         Gate::policy(NotifyChannel::class, NotifyChannelPolicy::class);
         Gate::policy(NotifyRule::class, NotifyRulePolicy::class);

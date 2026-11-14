@@ -30,7 +30,7 @@ class IngestCatalogueTest extends TestCase
 
     private const TASKS_SECRET = 'tasks-ingest-secret-for-tests';
 
-    private const BILLING_SECRET = 'billing-ingest-secret-for-tests';
+    private const AUCTION_SECRET = 'auction-ingest-secret-for-tests';
 
     private const COMPANY = '33333333-3333-4333-8333-333333333333';
 
@@ -40,7 +40,7 @@ class IngestCatalogueTest extends TestCase
     {
         parent::setUp();
 
-        config(['notify.ingest.secrets' => ['tasks' => self::TASKS_SECRET, 'billing' => self::BILLING_SECRET, 'hr' => 'hr-secret-for-tests'], 'notify.ingest.rate_limit_per_minute' => 1000]);
+        config(['notify.ingest.secrets' => ['tasks' => self::TASKS_SECRET, 'auction' => self::AUCTION_SECRET, 'hr' => 'hr-secret-for-tests'], 'notify.ingest.rate_limit_per_minute' => 1000]);
 
         $this->team = User::factory()->withPersonalTeam()->create()->currentTeam;
         DB::table('teams')->where('id', $this->team->id)->update(['infodot_team_uuid' => self::COMPANY]);
@@ -74,7 +74,7 @@ class IngestCatalogueTest extends TestCase
 
     private function send(array $body, string $platform = 'tasks'): TestResponse
     {
-        return $this->signedIngest($platform, $platform === 'billing' ? self::BILLING_SECRET : ($platform === 'hr' ? 'hr-secret-for-tests' : self::TASKS_SECRET), $body);
+        return $this->signedIngest($platform, $platform === 'auction' ? self::AUCTION_SECRET : ($platform === 'hr' ? 'hr-secret-for-tests' : self::TASKS_SECRET), $body);
     }
 
     private function inbound(): NotifyInboundEvent
@@ -235,8 +235,8 @@ class IngestCatalogueTest extends TestCase
         Queue::fake();
         $this->enable('tasks', 'task.assigned');
 
-        // Billing holds its own secret, but task.assigned belongs to Dot.Tasks.
-        $response = $this->send($this->assignedPayload(['platform' => 'billing', 'idempotency_key' => 'spoof-1']), 'billing');
+        // Dot.Auction holds its own secret, but task.assigned belongs to Dot.Tasks.
+        $response = $this->send($this->assignedPayload(['platform' => 'auction', 'idempotency_key' => 'spoof-1']), 'auction');
 
         $response->assertStatus(202)->assertJsonPath('status', 'no_rule');
         $this->assertSame(0, NotifyLog::withoutGlobalScopes()->count());
@@ -254,49 +254,20 @@ class IngestCatalogueTest extends TestCase
         $this->assertSame('transactional', NotifyLog::withoutGlobalScopes()->firstOrFail()->notification_type);
     }
 
-    public function test_the_billing_invoice_event_accepts_what_dot_billing_sends(): void
+    public function test_a_number_of_zero_is_shown_not_treated_as_missing(): void
     {
-        $this->enable('billing', 'invoice.overdue');
+        $this->enable('hr', 'leave.requested');
 
         $this->send([
-            'platform' => 'billing',
+            'platform' => 'hr',
             'company_uuid' => self::COMPANY,
-            'event' => 'invoice.overdue',
+            'event' => 'leave.requested',
             'recipient' => ['email' => 'owner@example.test'],
-            'data' => [
-                'team_name' => 'Acme',
-                'invoice_number' => 'INV-0007',
-                'total' => 'R 1 150.00',
-                'balance' => 'R 1 150.00',
-                'currency' => 'ZAR',
-                'due_date' => '2026-10-01',
-                'days_overdue' => 17,
-                'invoice_url' => 'https://billing.infodot.app/invoices/7',
-            ],
-            'idempotency_key' => 'invoice.overdue:7:2026-10-18',
-        ], 'billing')->assertStatus(202)->assertJsonPath('status', 'routed');
+            'data' => ['employee_name' => 'Naledi', 'days' => 0],
+            'idempotency_key' => 'leave.requested:8:2026-10-18',
+        ], 'hr')->assertStatus(202);
 
-        $log = NotifyLog::withoutGlobalScopes()->firstOrFail();
-        $this->assertSame('Invoice INV-0007 is overdue', $log->subject);
-        $this->assertMatchesRegularExpression('/^Days overdue: 17$/m', $log->body_preview);
-        $this->assertStringContainsString('https://billing.infodot.app/invoices/7', $log->body_preview);
-        $this->assertSame([], $this->inbound()->payload['dropped_data_keys'] ?? []);
-    }
-
-    public function test_a_days_overdue_of_zero_is_shown_not_treated_as_missing(): void
-    {
-        $this->enable('billing', 'invoice.overdue');
-
-        $this->send([
-            'platform' => 'billing',
-            'company_uuid' => self::COMPANY,
-            'event' => 'invoice.overdue',
-            'recipient' => ['email' => 'owner@example.test'],
-            'data' => ['invoice_number' => 'INV-0008', 'days_overdue' => 0],
-            'idempotency_key' => 'invoice.overdue:8:2026-10-18',
-        ], 'billing')->assertStatus(202);
-
-        $this->assertMatchesRegularExpression('/^Days overdue: 0$/m', NotifyLog::withoutGlobalScopes()->firstOrFail()->body_preview);
+        $this->assertMatchesRegularExpression('/^Days: 0$/m', NotifyLog::withoutGlobalScopes()->firstOrFail()->body_preview);
     }
 
     public function test_a_team_edited_template_keeps_its_wording_and_still_gets_only_catalogued_data(): void

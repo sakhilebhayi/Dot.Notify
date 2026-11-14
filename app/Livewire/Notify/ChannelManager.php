@@ -3,7 +3,9 @@
 namespace App\Livewire\Notify;
 
 use App\Models\NotifyChannel;
+use App\Models\NotifyLog;
 use App\Models\Team;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Computed;
@@ -36,6 +38,31 @@ class ChannelManager extends Component
     public function channels()
     {
         return NotifyChannel::with('team')->orderBy('type')->get();
+    }
+
+    /**
+     * What each channel has really handed over, from the log: how many messages
+     * it accepted and when the last one was. A channel missing from this list has
+     * never sent anything, and the page says so. NotifyLog's HasTeamScope keeps it
+     * to the current team.
+     *
+     * @return array<int, array{count: int, last: Carbon}>
+     */
+    #[Computed]
+    public function sentByChannel(): array
+    {
+        return NotifyLog::query()
+            ->where('status', 'sent')
+            ->whereNotNull('channel_id')
+            ->whereNotNull('sent_at')
+            ->selectRaw('channel_id, count(*) as sent_count, max(sent_at) as last_sent_at')
+            ->groupBy('channel_id')
+            ->get()
+            ->mapWithKeys(fn ($row) => [(int) $row->channel_id => [
+                'count' => (int) $row->sent_count,
+                'last' => Carbon::parse($row->last_sent_at),
+            ]])
+            ->all();
     }
 
     public function addChannel(): void

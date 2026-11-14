@@ -11,7 +11,7 @@ class EnableDefaultEvents extends Command
 {
     protected $signature = 'notify:enable-defaults
         {team_uuid : The InfoDot company uuid (teams.infodot_team_uuid)}
-        {platform? : Only this platform\'s events (tasks, hr, auction, ehail, farms, billing); all platforms when left out}
+        {platform? : Only this platform\'s events (tasks, hr, auction, ehail); all platforms when left out}
         {--events= : Comma-separated event names to switch on instead of every event of the platform}';
 
     protected $description = 'Switch on catalogued Dot app events for one company, creating its default templates and rules. Safe to repeat: edited templates and existing rules are kept.';

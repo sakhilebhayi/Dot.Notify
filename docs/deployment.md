@@ -23,7 +23,7 @@ The branch the host runs, `main`, is the unmerged real-time trunk. These open PR
 | #5 | `feat/viewer-role` | read-only viewer role | none |
 | #6 | `feat/event-catalogue` | event catalogue, per-company switches, opt-outs | `notify_preferences.event`, `notify_logs.event` (additive) |
 
-On the trunk alone Notify has **no ingest endpoint**, so no Dot app can send it anything, and SSO redeem needs a database shared with InfoDot. Notify is also where every other app's email goes: **deploy it before enabling `NOTIFY_INGEST_*` in Tasks, Auction, Ehail or Farms.**
+On the trunk alone Notify has **no ingest endpoint**, so no Dot app can send it anything, and SSO redeem needs a database shared with InfoDot. Notify is also where every other app's email goes: **deploy it before enabling `NOTIFY_INGEST_*` in Tasks, Auction or Ehail.**
 
 Migrations are not run by `adopt` (unless you ask), but **a normal `deploy` always runs them**. The rollback copy contains a SQLite file; it does **not** contain a PostgreSQL or MySQL database.
 
@@ -142,13 +142,11 @@ DOT_INFODOT_URL=https://infodot.co.za
 
 # One secret per CALLING platform: openssl rand -hex 32. The same value goes in that
 # app's own NOTIFY_INGEST_SECRET. Blank = that platform cannot call.
-# .env.example lists only BILLING, FILES, HR, PROJECTS and TASKS; the key is read as
+# .env.example lists only FILES, HR, PROJECTS and TASKS; the key is read as
 # NOTIFY_INGEST_SECRET_<PLATFORM KEY UPPER-CASED>, so add the others you need:
 NOTIFY_INGEST_SECRET_TASKS=
 NOTIFY_INGEST_SECRET_AUCTION=
 NOTIFY_INGEST_SECRET_EHAIL=
-NOTIFY_INGEST_SECRET_FARMS=
-NOTIFY_INGEST_SECRET_BILLING=
 NOTIFY_INGEST_SECRET_HR=
 NOTIFY_INGEST_RATE_LIMIT=120
 
@@ -158,8 +156,6 @@ NOTIFY_INGEST_RATE_LIMIT=120
 DOT_TASKS_URL=https://tasks.infodot.co.za
 DOT_AUCTION_URL=https://auction.infodot.co.za
 DOT_EHAIL_URL=https://ehail.infodot.co.za
-DOT_FARMS_URL=https://farms.infodot.co.za
-DOT_BILLING_URL=https://billing.infodot.co.za
 DOT_HR_URL=https://hr.infodot.co.za
 ```
 

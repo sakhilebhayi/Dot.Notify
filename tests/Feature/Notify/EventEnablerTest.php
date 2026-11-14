@@ -252,10 +252,10 @@ class EventEnablerTest extends TestCase
 
         $states = $this->enabler->states($this->team);
 
-        $this->assertCount(19, $states);
+        $this->assertCount(17, $states);
         $this->assertSame('on', $states['task.assigned']);
         $this->assertSame('off', $states['task.due_soon']);
-        $this->assertSame('off', $states['invoice.overdue']);
+        $this->assertSame('off', $states['ride.expired']);
     }
 
     public function test_enabling_a_whole_platform_turns_on_each_of_its_events_once(): void
@@ -281,6 +281,6 @@ class EventEnablerTest extends TestCase
     {
         $this->expectException(InvalidArgumentException::class);
 
-        $this->enabler->enable($this->team, 'billing', 'task.assigned');
+        $this->enabler->enable($this->team, 'hr', 'task.assigned');
     }
 }
