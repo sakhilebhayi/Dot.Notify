@@ -431,3 +431,29 @@ html.dark .nf-tick.is-on .nf-box { border-color:var(--mark); }
     *, *::before, *::after { animation-duration:0.01ms !important; animation-iteration-count:1 !important; transition-duration:0.01ms !important; scroll-behavior:auto !important; }
     .sidebar, .shell-backdrop, .nav-item, .topbar-btn, .dot-btn { transition:none !important; }
 }
+
+/* ---------------------------------------------------- R-50: the refusal slip (entitlement/refused) */
+/* The company does not hold Dot.Notify: one slip, the state that applies ticked, one action. */
+.nf-gate-page { margin:0; padding:2rem 1.5rem 3rem; min-height:100vh; background:var(--paper); }
+.nf-gate { max-width:44rem; margin:0 auto; }
+.nf-gate-top { display:flex; align-items:center; justify-content:space-between; gap:1rem; }
+.nf-gate-top form { margin:0; }
+.nf-gate-logo { display:block; height:112px; width:auto; margin:-14px 0 -18px -24px; }
+.nf-gate-slip { margin-top:1.5rem; padding:1.75rem 1.75rem 2rem; }
+.nf-gate-title { margin:0; font-size:1.75rem; line-height:1.15; font-weight:750; letter-spacing:-0.022em; text-wrap:balance; overflow-wrap:break-word; }
+p.nf-gate-body { margin:0.875rem 0 0; font-size:1.0625rem; line-height:1.55; color:var(--ink-2); max-width:36rem; text-wrap:pretty; }
+.nf-gate-ticks { grid-template-columns:repeat(2,minmax(0,1fr)); margin:1.25rem 0 0; }
+.nf-gate-slip .nf-primary { margin-top:1.5rem; }
+.nf-gate-others { margin-top:2.5rem; }
+.nf-gate-others .dot-row-actions { margin:0; }
+.nf-gate-others form { margin:0; }
+.nf-gate-top .nf-linkbtn { min-height:44px; padding:0 6px; font-size:0.875rem; }
+.sr-only { position:absolute; width:1px; height:1px; margin:-1px; padding:0; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+@media (max-width: 560px) {
+    .nf-gate-page { padding:1rem 1rem 2rem; }
+    .nf-gate-slip { padding:1.25rem 1.125rem 1.5rem; }
+    .nf-gate-title { font-size:1.5rem; }
+    .nf-gate-ticks { grid-template-columns:minmax(0,1fr); }
+    .nf-gate-slip .nf-primary { display:flex; justify-content:center; width:100%; }
+    .nf-gate-others .dot-btn { min-height:44px; }
+}

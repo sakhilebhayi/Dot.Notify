@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\EcosystemAuthController;
 use App\Http\Controllers\RealtimeHealthController;
 use App\Http\Controllers\WebhookInboundController;
+use App\Http\Middleware\EnsureCompanyEntitled;
 use App\Models\NotifyBatch;
 use App\Models\NotifyChannel;
 use App\Models\NotifyLog;
@@ -54,6 +55,8 @@ Route::middleware([
     'auth:sanctum',
     config('jetstream.auth_session'),
     'verified',
+    // R-50: the current company must still hold Dot.Notify. The webhook receiver and the ingest API are outside.
+    EnsureCompanyEntitled::class,
 ])->group(function () {
     Route::get('/dashboard', function () {
         // currentTeam is null for a user with no team (freshly registered
