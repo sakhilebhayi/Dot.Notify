@@ -12,7 +12,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
     <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
     {{-- Tailwind's CDN build styles only the Jetstream account pages (profile, team) that render inside this shell.
-         The shell itself, the home page and Connected apps are styled by resources/css/notify.css. --}}
+         The shell itself, the home page and Connected apps are styled by the notify stylesheet loaded below. --}}
     <script src="https://cdn.tailwindcss.com"></script>
     <script>tailwind.config = { darkMode: 'class', corePlugins: { preflight: false } }</script>
     <script>
