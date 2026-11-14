@@ -59,15 +59,25 @@
                         </div>
                     </div>
                 </div>
+                @if($confirmingDeleteId === $channel->id)
+                <div class="nf-confirm" role="alertdialog" aria-label="Remove {{ $channel->name }}?">
+                    <p class="nf-confirm-text">Remove {{ $channel->name }}? Rules that use it will stop sending. Keeping it changes nothing.</p>
+                    <div class="dot-row-actions">
+                        <button type="button" wire:click="cancelDelete" class="dot-btn dot-btn-ghost dot-btn-small" x-init="$el.focus()">Keep it</button>
+                        <button type="button" wire:click="deleteChannel({{ $channel->id }})" class="row-action" aria-label="Confirm removing {{ $channel->name }}">Remove</button>
+                    </div>
+                </div>
+                @else
                 <div class="dot-row-actions">
                     <x-status :kind="$channel->is_active ? 'on' : 'off'" :label="$channel->is_active ? 'Active' : 'Inactive'" />
                     @can('update', $channel)
                     <button type="button" wire:click="toggleChannel({{ $channel->id }})" class="dot-btn dot-btn-ghost dot-btn-small" aria-label="Toggle {{ $channel->name }}">Toggle</button>
                     @endcan
                     @can('delete', $channel)
-                    <button type="button" wire:click="deleteChannel({{ $channel->id }})" class="row-action" aria-label="Remove {{ $channel->name }}">Remove</button>
+                    <button type="button" wire:click="confirmDelete({{ $channel->id }})" class="row-action" aria-label="Remove {{ $channel->name }}">Remove</button>
                     @endcan
                 </div>
+                @endif
             </div>
             @endforeach
         </div>

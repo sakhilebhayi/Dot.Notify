@@ -1,7 +1,7 @@
 <div>
     <div class="card-head">
         <div>
-            <h2 class="nf-h2">Routing Rules</h2>
+            <h2 class="nf-h2">Routing rules</h2>
             <p class="nf-sub">A rule sends one template through one channel when an event arrives.</p>
         </div>
         @can('create', [\App\Models\NotifyRule::class, auth()->user()->currentTeam])
@@ -76,6 +76,15 @@
                         Sends {{ $rule->template->name ?? 'deleted template' }} through {{ $rule->channel->name ?? 'deleted channel' }} ({{ ucfirst($rule->channel->type ?? '?') }}){{ $rule->rate_ceiling_per_hour ? ', capped at '.$rule->rate_ceiling_per_hour.' an hour' : '' }}.
                     </div>
                 </div>
+                @if($confirmingDeleteId === $rule->id)
+                <div class="nf-confirm" role="alertdialog" aria-label="Remove {{ $rule->trigger_event }}?">
+                    <p class="nf-confirm-text">Remove {{ $rule->trigger_event }}? That event stops being sent. Keeping it changes nothing.</p>
+                    <div class="dot-row-actions">
+                        <button type="button" wire:click="cancelDelete" class="dot-btn dot-btn-ghost dot-btn-small" x-init="$el.focus()">Keep it</button>
+                        <button type="button" wire:click="deleteRule({{ $rule->id }})" class="row-action" aria-label="Confirm removing {{ $rule->trigger_event }}">Remove</button>
+                    </div>
+                </div>
+                @else
                 <div class="dot-row-actions">
                     <x-status :kind="$rule->is_active ? 'on' : 'off'" :label="$rule->is_active ? 'Active' : 'Inactive'" />
                     @can('update', $rule)
@@ -83,9 +92,10 @@
                     <button type="button" wire:click="toggleRule({{ $rule->id }})" class="dot-btn dot-btn-ghost dot-btn-small" aria-label="Toggle {{ $rule->trigger_event }}">Toggle</button>
                     @endcan
                     @can('delete', $rule)
-                    <button type="button" wire:click="deleteRule({{ $rule->id }})" class="row-action" aria-label="Remove {{ $rule->trigger_event }}">Remove</button>
+                    <button type="button" wire:click="confirmDelete({{ $rule->id }})" class="row-action" aria-label="Remove {{ $rule->trigger_event }}">Remove</button>
                     @endcan
                 </div>
+                @endif
             </div>
             @endforeach
         </div>

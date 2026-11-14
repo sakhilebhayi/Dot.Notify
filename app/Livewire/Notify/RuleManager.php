@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\On;
 use Livewire\Component;
 
 /**
@@ -71,6 +72,13 @@ class RuleManager extends Component
     public function channelOptions()
     {
         return NotifyChannel::orderBy('name')->get();
+    }
+
+    /** Raised by the slip on the log: "Edit the rule" opens this rule's form. The same gate as edit(). */
+    #[On('notify.edit-rule')]
+    public function editFromLog(int $id): void
+    {
+        $this->edit($id);
     }
 
     public function edit(int $id): void
@@ -181,8 +189,23 @@ class RuleManager extends Component
         unset($this->rules);
     }
 
+    public ?int $confirmingDeleteId = null;
+
+    public function confirmDelete(int $id): void
+    {
+        $rule = NotifyRule::findOrFail($id);
+        Gate::authorize('delete', $rule);
+        $this->confirmingDeleteId = $rule->id;
+    }
+
+    public function cancelDelete(): void
+    {
+        $this->confirmingDeleteId = null;
+    }
+
     public function deleteRule(int $id): void
     {
+        $this->confirmingDeleteId = null;
         $rule = NotifyRule::findOrFail($id);
         Gate::authorize('delete', $rule);
         $rule->delete();

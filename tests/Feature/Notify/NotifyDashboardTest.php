@@ -100,7 +100,7 @@ class NotifyDashboardTest extends TestCase
             ->get('/dashboard')
             ->assertOk()
             ->assertSee('Spring Promo')
-            ->assertSee('Recent Batches');
+            ->assertSee('Recent batches');
     }
 
     public function test_dashboard_does_not_leak_other_teams_data(): void
