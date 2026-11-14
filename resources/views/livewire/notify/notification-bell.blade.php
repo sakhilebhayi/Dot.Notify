@@ -1,8 +1,8 @@
-<div class="bell-wrap" x-data @click.outside="$wire.open = false">
-    <button type="button" wire:click="toggle" class="topbar-btn" title="Notifications" aria-label="Notifications" aria-expanded="{{ $open ? 'true' : 'false' }}">
-        <x-icon name="bell" />
+<div class="bell-wrap" x-data @click.outside="if ($wire.open) { $wire.$set('open', false) }" @keydown.escape.window="if ($wire.open) { $wire.$set('open', false).then(() => $refs.bellButton && $refs.bellButton.focus()) }">
+    <button type="button" x-ref="bellButton" wire:click="toggle" class="dh-icon-btn nf-bell-btn" title="Notifications" aria-label="{{ $this->unreadCount > 0 ? 'Notifications, '.$this->unreadCount.' unread' : 'Notifications' }}" aria-expanded="{{ $open ? 'true' : 'false' }}">
+        <svg class="dh-ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 17V11a6 6 0 0 1 12 0v6l1.5 2h-15L6 17zM10 21h4"/></svg>
         @if($this->unreadCount > 0)
-            <span class="bell-count">{{ $this->unreadCount > 9 ? '9+' : $this->unreadCount }}</span>
+            <span class="dh-badge" aria-hidden="true">{{ $this->unreadCount > 9 ? '9+' : $this->unreadCount }}</span>
         @endif
     </button>
 

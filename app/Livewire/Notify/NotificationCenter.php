@@ -16,8 +16,9 @@ class NotificationCenter extends Component
     public string $search = '';
 
     /**
-     * The message shown on the slip (?log=ID). Only ever honoured when it is one of the rows on show, which are
-     * this company's alone; anything else falls back to the default (newest failed, else newest).
+     * The message shown on the slip (?log=ID). Honoured when it is one of the rows on show, or (R-52: a header-search result
+     * can be older than the 20 newest), with no filter on, when it is another message of THIS company, looked up with an explicit team_id;
+     * anything else falls back to the default (newest failed, else newest).
      */
     #[Url(as: 'log', history: false)]
     public ?int $selected = null;
@@ -47,9 +48,21 @@ class NotificationCenter extends Component
     {
         $logs = $this->logs;
 
-        return ($this->selected !== null ? $logs->firstWhere('id', $this->selected) : null)
+        return ($this->selected !== null ? ($logs->firstWhere('id', $this->selected) ?? $this->olderOfThisCompany($this->selected)) : null)
             ?? $logs->first(fn (NotifyLog $log) => $log->hasFailed())
             ?? $logs->first();
+    }
+
+    private function olderOfThisCompany(int $id): ?NotifyLog
+    {
+        // With a filter on, a message the filter hides is not shown (the slip follows what the list shows).
+        if ($this->filterStatus !== '' || $this->search !== '') {
+            return null;
+        }
+
+        $team = auth()->user()?->currentTeam;
+
+        return $team === null ? null : NotifyLog::query()->with(['channel', 'rule'])->where('team_id', $team->id)->find($id);
     }
 
     public function select(int $id): void

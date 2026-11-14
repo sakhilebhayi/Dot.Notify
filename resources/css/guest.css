@@ -1,0 +1,55 @@
+/*
+ * Guest and sign-in pages (R-52). The Message Pad's DARK scheme (the pad's cover: deep blue ink, ballpoint blue, the highlighter yellow),
+ * the same tokens as resources/css/notify.css html.dark, so signing in no longer looks like another product. Roboto comes from the shared
+ * dot-ui (loaded in layouts/guest.blade.php). This was an inline <style> block (cream and gold on a green ink); a file is what a nonce CSP allows.
+ *
+ * Loaded only by layouts/guest.blade.php (guest pages), never by the signed-in shell, so these rules cannot leak into the dashboard.
+ */
+:root {
+    --ink: #0d1130;
+    --ink-soft: #141a40;
+    --amber: #f2c832;
+    --amber-soft: #f6d95e;
+    --green: #b1bcff;
+    --green-soft: #cdd4ff;
+    --paper: #edf0fc;
+    --mist: #a9b2dc;
+    --line: rgba(237, 240, 252, 0.16);
+    --font-display: var(--dot-font-sans);
+    --font-body: var(--dot-font-sans);
+    --font-mono: var(--dot-font-mono);
+}
+html, body { background: var(--ink); }
+body { font-family: var(--font-body); color: var(--paper); }
+.font-display { font-family: var(--font-display); }
+
+/* The page behind the card: the cover, with a soft wash of ballpoint blue from the top left */
+.guest-stage { background: radial-gradient(ellipse 80% 60% at 15% 0%, rgba(177, 188, 255, 0.12) 0%, transparent 60%), var(--ink); }
+
+/* Brand overrides for Jetstream's shared x-input/x-label/x-button/x-checkbox components. !important wins over the compiled Tailwind
+   utility classes already in the shared component markup, which are left untouched (so their name/action/model bindings stay exactly as
+   Fortify expects). */
+.dark .dark\:bg-gray-900,
+.dark .dark\:bg-gray-800 { background-color: var(--ink-soft) !important; }
+.bg-gray-100.dark\:bg-gray-900 { background-color: var(--ink) !important; }
+.dark .dark\:text-gray-400,
+.dark .dark\:text-gray-300 { color: var(--mist) !important; }
+.dark .dark\:hover\:text-gray-100:hover { color: var(--paper) !important; }
+.dark .dark\:border-gray-700 { border-color: var(--line) !important; }
+input:focus, textarea:focus, select:focus {
+    border-color: var(--amber) !important;
+    box-shadow: 0 0 0 3px rgba(242, 200, 50, 0.28) !important;
+    outline: none !important;
+}
+.dark .dark\:bg-gray-200 { background-color: var(--amber) !important; }
+.dark .dark\:text-gray-800 { color: #0d1130 !important; }
+.dark .dark\:hover\:bg-white:hover,
+.dark .dark\:focus\:bg-white:focus,
+.dark .dark\:active\:bg-gray-300:active { background-color: var(--amber-soft) !important; }
+button:focus { box-shadow: 0 0 0 3px rgba(242, 200, 50, 0.35) !important; }
+.text-indigo-600 { color: var(--amber) !important; }
+/* The checkbox needs its own contrast against the card, not the same fill as the card itself */
+input[type="checkbox"].dark\:bg-gray-900 { background-color: var(--ink) !important; border-color: rgba(237, 240, 252, 0.4) !important; }
+.dark .dark\:text-green-400 { color: #86d595 !important; }
+.dark .dark\:text-red-400 { color: #ffa59c !important; }
+.dark .dark\:prose-invert a { color: var(--amber-soft) !important; }

@@ -75,8 +75,9 @@ or an open rate is claiming something this one refuses to.
 - *Owner brief:* the product should feel "clear and dependable".
 - *Owner brief:* its look must be its own, distinct from the other Dot platforms, and must not borrow the dark
   control-room look of the ecosystem's internal tools. It works in light and dark.
-- Typefaces and icons are served by the app's own build; no font is loaded from a third-party host. (Known debt:
-  the Jetstream account pages inside the shell still take Tailwind from its CDN script.)
+- Roboto (the ecosystem's one typeface, shared dot-ui) and the icons are served by this site; no font and no
+  script is loaded from a third-party host. The Jetstream account pages inside the shell take their Tailwind from
+  the built stylesheet (R-52); the Tailwind CDN script is gone.
 
 ## Evidence on Hand
 

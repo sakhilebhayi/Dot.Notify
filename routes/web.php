@@ -10,6 +10,7 @@ use App\Models\NotifyLog;
 use App\Models\NotifyRule;
 use App\Models\NotifyTemplate;
 use App\Support\DashboardAttention;
+use App\Support\HeaderSearch;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
@@ -137,6 +138,16 @@ Route::middleware([
             'recentBatches' => NotifyBatch::orderByDesc('created_at')->limit(5)->get(),
         ]);
     })->name('dashboard');
+
+    // The header search's full results page: this company's own messages, rules, channels, templates, batches and
+    // events (App\Support\HeaderSearch). Same group, so the same sign-in, verification and entitlement checks.
+    Route::get('/search', function () {
+        if (! Auth::user()?->currentTeam) {
+            return redirect()->route('teams.create');
+        }
+
+        return view('search', ['results' => HeaderSearch::run(Auth::user(), (is_string(request()->query('q')) ? request()->query('q') : ''), 20)]);
+    })->name('search');
 
     // Which events each Dot app can send, and which of them this company has switched on.
     Route::get('/connected-apps', function () {

@@ -145,17 +145,21 @@ A recipient who has a Dot.Notify account can switch one event type off per chann
 
 ## Responsive shell
 
-The app shell's markup and its one small inline script live in `resources/views/layouts/app.blade.php`; its styles, with the design tokens and the self-hosted typefaces, live in `resources/css/notify.css`, built by Vite (`npm run build`). The design system is recorded in `DESIGN.md` (The Message Pad) and the product context in `PRODUCT.md`.
+The app shell is `resources/views/layouts/app.blade.php`: the shared dot-ui header (`<x-dot.header>`, R-52) over the sidebar. Its styles, with the design tokens, live in `resources/css/notify.css`, built by Vite (`npm run build`). Roboto and the type scale are the shared dot-ui ones (`public/dot-ui/css/dot-roboto.css`, `dot-type.css`, `html.dot-roboto`), self-hosted: no font file, no CDN, no inline script or style in the shell. The design system is recorded in `DESIGN.md` (The Message Pad) and the product context in `PRODUCT.md`.
 
-- **Breakpoint: 860px.** At or above it the sidebar is fixed beside the content. Below it (`max-width: 859.98px`) the sidebar becomes an off-canvas drawer opened from the top bar.
-- **Hooks:** menu button `#shell-menu-button` (labelled "Menu", `aria-expanded`, `aria-controls="shell-drawer"`), drawer `#shell-drawer` (the sidebar), backdrop `#shell-backdrop`, close button `#shell-close`, top bar `.topbar`. The top bar and the content wrapper carry `data-shell-behind`: while the drawer is open they get `inert`, so focus stays in the drawer, and `html.shell-open` locks page scroll.
-- **Closing:** Escape, the backdrop, the close button, following a nav link, or the viewport growing past 860px. Focus returns to the menu button. A closed drawer is `visibility:hidden`, so it is out of the tab order and hidden from assistive tech. Motion is off under `prefers-reduced-motion`.
-- **Content offset:** `--topbar-h` is the single source for the top bar height and the content's top padding.
+- **Header:** the logo and platform name, the company name (from 1600px), the search (centred by the header's grid), the Dot Apps switcher, the notification bell and the account menu (profile, team settings, create team, Light / Dark / System, sign out). The page title is the page's own `h1` and the document title; it is not in the bar.
+- **Header search:** `App\Livewire\Notify\HeaderSearch` (the live dropdown) and `GET /search?q=` (`search`, the full page) ask `App\Support\HeaderSearch` one question of this company's messages log (recipient, subject, event, status), rules, channels, templates, batches and the events the connected apps can send. Every query carries the current team's id. It never reads a message body, a failure reason or a channel's config. A message result links to `?log=ID` on the dashboard (the existing log selection, which now also opens a message older than the 20 on show); the others link to the dashboard sections or Connected apps. Tests: `tests/Feature/HeaderSearchTest.php`.
+- **Breakpoint: 860px**, the header's own. Above it the sidebar is fixed under the header. At or below it (`max-width: 860px`) the sidebar is the phone menu: the header's menu button opens it (dot-ui `drawer-target`, `dot-nav.js` sets `data-dh-open`, draws the scrim, locks the scroll, traps focus), and it also holds the account, the theme and the team switch.
+- **Hooks:** the sidebar `#shell-drawer`, its close button `[data-dh-close]`, the header `.dh`, the content `#main`. A closed phone menu is `visibility:hidden`, so it is out of the tab order. Motion is off under `prefers-reduced-motion`.
+- **Closing:** Escape, the scrim, the close button, or following a link. Focus returns to the menu button.
+- **Theme:** the account menu's Light / Dark / System buttons are dot-ui's; `public/js/notify-shell.js` (a plain file loaded in `<head>`, so there is no flash and no inline script) turns the choice into the pad's `html.dark` class.
+- **Jetstream pages** (profile, team) take their Tailwind from `resources/css/jetstream.css` (`tailwind.jetstream.config.js`, preflight off, the dot-ui Roboto preset), which replaced the Tailwind Play CDN script. Guest pages use `resources/css/guest.css` and `app.css`.
+- **Content offset:** `--topbar-h` is `--dot-header-h`, and the sidebar sits at `--dot-header-offset`.
 - **Page helpers:** `.page` (page padding), `.nf-section` (a ruled section), `.nf-today` (the home page's line of figures), `.two-col` (stacks below 1100px), `.dot-row` / `.dot-row-main` / `.dot-row-actions` (list rows that wrap), `.form-grid-2` / `.form-grid-3` (single column on phones), `.row-action` (touch size on phones).
+- **The log on a phone:** every column stays; each message is a stacked row (recipient and status, then event and time).
 - **Adding a wide table:** wrap it in `<div class="table-scroll"><table>...</table></div>`. The wrapper scrolls sideways inside its own box and the page never does. Do not set fixed widths on cards or rows; use `min-width:0` and `overflow-wrap:anywhere` for long values.
-- **Team and account links** (team settings, create team, switch team, log out) are in the drawer; the old Jetstream `navigation-menu` bar is no longer rendered in this layout.
 
-Tests: `tests/Feature/ResponsiveShellTest.php` pins the markup hooks. It cannot check appearance.
+Tests: `tests/Feature/ResponsiveShellTest.php` and `tests/Feature/R52TypographyAndShellTest.php` pin the markup hooks, Roboto and the no-inline rules. They cannot check appearance; the responsive harness (`~/Dot/r52/harness`) does.
 
 ## Home page
 
