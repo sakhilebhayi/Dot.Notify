@@ -91,7 +91,7 @@ class DotUiHeaderTest extends TestCase
         $this->assertStringContainsString('dsr-input', $html);
         $this->assertStringContainsString('role="search"', $html);
         $this->assertStringContainsString('action="'.route('search').'"', $html);
-        $this->assertStringContainsString('placeholder="Search messages, rules, channels, templates"', $html);
+        $this->assertStringContainsString('placeholder="Search messages, rules…"', $html);
     }
 
     public function test_the_delivery_log_filter_is_the_shared_compact_filter_with_the_same_binding(): void

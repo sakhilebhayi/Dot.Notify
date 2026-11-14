@@ -440,6 +440,24 @@ html.dark .nf-tick.is-on .nf-box { border-color:var(--mark); }
     .nf-act { grid-column:1 / -1; flex-direction:row; align-items:center; justify-content:space-between; }
 }
 
+/* Touch targets (R-52): 44px on a phone, a tablet (up to 1024px wide, the harness's own line) and any coarse pointer. Form controls are 16px so
+   iOS does not zoom on focus. A mouse on a wide screen keeps the compact sizes above. */
+@media (max-width: 1024px), (pointer: coarse) {
+    .dot-input, .toolbar-select { font-size:1rem; min-height:44px; }
+    .dot-btn, .dot-btn-small { min-height:44px; min-width:44px; }
+    .row-action { min-height:44px; min-width:44px; }
+    .nf-back a, .nf-jump a, .nf-linkbtn { min-height:44px; }
+    .nf-back a, .nf-jump a { min-width:44px; justify-content:center; }
+    .nf-fig dt { align-self:stretch; display:flex; }
+    .nf-fig dt a { display:flex; align-items:center; min-height:44px; }
+    .nf-linkbtn { display:inline-flex; align-items:center; }
+    .nf-table td.nf-cell-main a { display:flex; align-items:center; min-height:44px; }
+    .ca-details summary { min-height:44px; display:flex; align-items:center; }
+    /* Jetstream forms (profile, team) that render inside this layout */
+    .content-wrap input:not([type=checkbox]):not([type=radio]):not([type=hidden]):not([type=file]), .content-wrap select, .content-wrap textarea { min-height:44px; font-size:1rem; }
+    .content-wrap button.inline-flex { min-height:44px; }
+}
+
 @media (max-width: 860px) {
     /* The phone menu. Closed it is visibility:hidden, so it is out of the tab order and hidden from assistive tech, not just off-screen.
        dot-nav.js (adopt mode) sets data-dh-open on it, draws the scrim on <body>, locks the scroll and traps focus. */
@@ -464,20 +482,7 @@ html.dark .nf-tick.is-on .nf-box { border-color:var(--mark); }
     .toolbar-search { width:auto; }
     .toolbar-select { flex:0 1 auto; }
 
-    /* Form controls: 16px stops iOS zooming on focus, 44px is a comfortable touch target */
-    .dot-input, .toolbar-select { font-size:1rem; min-height:44px; }
     textarea.dot-input { min-height:5rem; }
-    .dot-btn, .dot-btn-small { min-height:44px; min-width:44px; }
-    .row-action { min-height:44px; min-width:44px; }
-    .nf-back a, .nf-jump a, .nf-linkbtn { min-height:44px; }
-    .nf-back a, .nf-jump a { min-width:44px; justify-content:center; }
-    .nf-fig dt { align-self:stretch; display:flex; }
-    .nf-fig dt a { display:flex; align-items:center; min-height:44px; }
-    .nf-linkbtn { display:inline-flex; align-items:center; }
-    /* Jetstream forms (profile, team) that render inside this layout */
-    .content-wrap input:not([type=checkbox]):not([type=radio]):not([type=hidden]):not([type=file]), .content-wrap select, .content-wrap textarea { min-height:44px; font-size:1rem; }
-    .content-wrap button.inline-flex { min-height:44px; }
-    .ca-details summary { min-height:44px; display:flex; align-items:center; }
 
     .arrive { grid-template-columns:72px minmax(0,1fr); gap:var(--s3); }
     .nf-logo { width:72px; }
@@ -492,7 +497,7 @@ html.dark .nf-tick.is-on .nf-box { border-color:var(--mark); }
     .nf-table tr { position:relative; display:grid; grid-template-columns:minmax(0,1fr) auto; grid-template-areas:'main status' 'event when'; gap:2px var(--s3); align-items:center; padding:var(--s2); border-top:1px solid var(--rule); min-height:var(--row); }
     .nf-table tbody tr:first-child { border-top:0; }
     .nf-table td { position:static; display:block; height:auto; padding:0; border:0; min-width:0; }
-    .nf-table td.nf-cell-main { grid-area:main; padding:6px 0 2px; }
+    .nf-table td.nf-cell-main { grid-area:main; padding:0; }
     .nf-table td.nf-cell-status { grid-area:status; justify-self:end; }
     .nf-table td.nf-cell-event { grid-area:event; overflow-wrap:anywhere; padding-bottom:6px; }
     .nf-table td.nf-when { grid-area:when; justify-self:end; padding-bottom:6px; }

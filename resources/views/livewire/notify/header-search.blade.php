@@ -8,7 +8,7 @@
         wire="query"
         hint="Ctrl K"
         label="Search Dot.Notify"
-        placeholder="Search messages, rules, channels, templates"
+        placeholder="Search messages, rules…"
         :escape-clears="true"
         loading-text="Looking through this company's records..."
         :root-attributes="['wire:loading.attr' => 'data-dsr-loading', 'wire:target' => 'query']">
