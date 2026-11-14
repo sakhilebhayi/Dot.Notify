@@ -439,6 +439,9 @@ html.dark .nf-tick.is-on .nf-box { border-color:var(--mark); }
 .nf-gate-top { display:flex; align-items:center; justify-content:space-between; gap:1rem; }
 .nf-gate-top form { margin:0; }
 .nf-gate-logo { display:block; height:112px; width:auto; margin:-14px 0 -18px -24px; }
+.nf-gate-logo.nf-logo-dark { display:none; }
+html.dark .nf-gate-logo.nf-logo-light { display:none; }
+html.dark .nf-gate-logo.nf-logo-dark { display:block; }
 .nf-gate-slip { margin-top:1.5rem; padding:1.75rem 1.75rem 2rem; }
 .nf-gate-title { margin:0; font-size:1.75rem; line-height:1.15; font-weight:750; letter-spacing:-0.022em; text-wrap:balance; overflow-wrap:break-word; }
 p.nf-gate-body { margin:0.875rem 0 0; font-size:1.0625rem; line-height:1.55; color:var(--ink-2); max-width:36rem; text-wrap:pretty; }
