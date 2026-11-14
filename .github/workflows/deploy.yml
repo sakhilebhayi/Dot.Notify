@@ -434,6 +434,21 @@ jobs:
             echo "== docroot build/ did not exist; linked to $APPDIR/public/build"
           fi
 
+          # ---- the shared Dot UI (public/dot-ui) is served from the docroot too
+          # Its stylesheets, fonts, logos and script are not part of public/build. While the docroot is the folder above the app
+          # (not <app>/public), Apache serves ITS copy, which git never refreshes: a changed shared file would 404 or go stale.
+          # Mirror it. Skipped once the document root is <app>/public. Tolerant: a failure here is a warning, never a failed release.
+          (
+            set +e
+            APP_REAL_UI="$(cd "$DEPLOY_PATH" 2>/dev/null && pwd -P)"
+            DOCROOT_NOW="$(uapi --output=json DomainInfo single_domain_data domain=notify.infodot.co.za 2>/dev/null | sed -n 's/.*"documentroot" *: *"\([^"]*\)".*/\1/p' | head -1)"
+            if [ -z "$APP_REAL_UI" ] || [ "$DOCROOT_NOW" = "$APP_REAL_UI/public" ] || [ -f "$DEPLOY_PATH/.docroot-is-public" ] || [ "$DOCROOT" = "$HOME" ]; then
+              echo "== docroot dot-ui/: skipped (the document root is the app's public folder, or there is no docroot above the app)"
+            elif [ -d public/dot-ui ] && [ ! -L "$DOCROOT/dot-ui" ]; then
+              mkdir -p "$DOCROOT/dot-ui" && rsync -a --delete public/dot-ui/ "$DOCROOT/dot-ui/" && echo "== docroot dot-ui/ mirrored" || echo "::warning::could not mirror public/dot-ui to the docroot (deploy continues)"
+            fi
+          ) || true
+
           # ---- PHP settings files: carry .user.ini / php.ini into public/ (tolerant, never fails the deploy)
           # The owner is moving each subdomain's document root from ~/<host>/ to ~/<host>/<app>/public. The old docroot may hold
           # cPanel/MultiPHP per-directory PHP settings (.user.ini and/or php.ini: upload sizes, memory limits). PHP reads

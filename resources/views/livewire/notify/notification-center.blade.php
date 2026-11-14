@@ -3,14 +3,7 @@
         <h2 class="nf-h2">Notification Log</h2>
         <div class="toolbar">
             <div class="toolbar-search">
-                <x-icon name="search" />
-                <input
-                    type="search"
-                    wire:model.live.debounce.400ms="search"
-                    placeholder="Search recipient or subject…"
-                    class="dot-input"
-                    aria-label="Search recipient or subject"
-                >
+                <x-dot.filter-search name="search" wire:model.live.debounce.400ms="search" placeholder="Search recipient or subject…" label="Search recipient or subject" />
             </div>
             <select wire:model.live="filterStatus" class="dot-input toolbar-select" aria-label="Filter by status">
                 <option value="">All statuses</option>

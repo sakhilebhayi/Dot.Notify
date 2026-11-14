@@ -2,8 +2,8 @@
 
 namespace App\Services\InfoDot;
 
+use Dot\Ui\PlatformSwitcher;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
@@ -75,61 +75,31 @@ class EntitlementClient
     private function ask(string $uuid): array|string
     {
         $platform = $this->platform();
-        $credential = (string) config('ecosystem.infodot.secret');
-        $url = $this->url($uuid);
 
-        if ($credential === '' || $platform === '' || $url === null) {
+        if ($platform === '' || (string) config('ecosystem.infodot.secret') === '') {
             return 'not configured';
         }
 
+        // The shared switcher reads the same endpoint for the header, and keeps the answer for the same ten minutes
+        // (a failure for one minute). Asking it here makes the page one InfoDot call instead of two. Nothing about the
+        // decision changes: held and not held are the two clear answers, and everything else (down, slow, refused, an
+        // unreadable body, own row missing, a personal workspace) is unknown, which carries on, as before. Its read
+        // timeout is the switcher's (3 s, connect 2 s).
         try {
-            $response = Http::withToken($credential)
-                ->withHeaders(['X-Dot-Platform' => $platform])
-                ->acceptJson()
-                ->connectTimeout(2)
-                ->timeout(max(1, min(3, (int) config('ecosystem.infodot.timeout', 5))))
-                ->get($url, ['platform' => $platform]);
+            $answer = PlatformSwitcher::fromConfig($platform)->entitlement($uuid);
         } catch (Throwable $e) {
             return 'unreachable ('.class_basename($e).')';
         }
 
-        if (! $response->successful()) {
-            return 'status '.$response->status();
+        if ($answer['state'] === PlatformSwitcher::HELD || $answer['state'] === PlatformSwitcher::NOT_HELD) {
+            return ['entitled' => $answer['state'] === PlatformSwitcher::HELD, 'status' => is_string($answer['status']) ? $answer['status'] : ''];
         }
 
-        $body = $response->json();
-
-        if (! is_array($body) || ($body['platform'] ?? null) !== $platform || ! is_array($body['platforms'] ?? null)) {
-            return 'malformed body';
-        }
-
-        foreach ($body['platforms'] as $row) {
-            if (is_array($row) && ($row['key'] ?? null) === $platform) {
-                if (! is_bool($row['entitled'] ?? null)) {
-                    return 'malformed body';
-                }
-
-                return ['entitled' => $row['entitled'], 'status' => is_string($row['status'] ?? null) ? $row['status'] : ''];
-            }
-        }
-
-        return 'own row missing';
+        return 'no usable answer';
     }
 
     private function platform(): string
     {
         return (string) config('ecosystem.infodot.platform');
-    }
-
-    /** The read endpoint sits beside the redeem endpoint: .../api/ecosystem/companies/{uuid}/platforms. */
-    private function url(string $uuid): ?string
-    {
-        $redeem = (string) config('ecosystem.infodot.redeem_url');
-
-        if ($redeem === '' || ! preg_match('#/redeem/?$#', $redeem)) {
-            return null;
-        }
-
-        return preg_replace('#/redeem/?$#', '', $redeem).'/companies/'.rawurlencode($uuid).'/platforms';
     }
 }
