@@ -11,15 +11,16 @@
  * pitfall that cost a whole sub-project there).
  */
 function initNotifications() {
-    if (typeof window.Echo === 'undefined') {
-        console.error('Laravel Echo not found. Ensure bootstrap.js loaded before notifications.js.');
-        return;
-    }
-
     const userId = document.querySelector('meta[name="user-id"]')?.content;
 
     if (!userId) {
-        // Not authenticated -- nothing to subscribe to.
+        // Not authenticated (the sign-in and guest pages): nothing to subscribe to, and
+        // nothing to complain about. Checked before Echo so a signed-out page stays silent.
+        return;
+    }
+
+    if (typeof window.Echo === 'undefined') {
+        console.error('Laravel Echo not found. Ensure bootstrap.js loaded before notifications.js.');
         return;
     }
 
