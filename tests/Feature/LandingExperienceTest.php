@@ -375,7 +375,9 @@ class LandingExperienceTest extends TestCase
 
         $css = (string) file_get_contents(resource_path('css/notify.css'));
         $this->assertStringNotContainsString('http', $css);
-        $this->assertFileExists(resource_path('fonts/atkinson-hyperlegible-next-latin-wght-normal.woff2'));
+        // Roboto is the typeface (R-52): its files ship with the shared dot-ui, served from this site; no font file lives in the app's own resources.
+        $this->assertFileExists(public_path('dot-ui/fonts/roboto/roboto-latin-wght-normal.woff2'));
+        $this->assertDirectoryDoesNotExist(resource_path('fonts'));
     }
 
     public function test_the_platform_list_holds_only_current_platforms(): void

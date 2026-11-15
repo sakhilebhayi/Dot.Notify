@@ -18,7 +18,7 @@ use Tests\TestCase;
  * The shell carries the shared Dot UI (dot-ui): the platform switcher in the header and the compact filter on the
  * delivery log. Presentation changed; the log search (its Livewire property, query, scope) did not. The switcher only
  * ever shows what InfoDot says the CURRENT company holds, linking through InfoDot's go route (never straight to a host,
- * never with a token). Dot.Notify has no header search, so none was added.
+ * never with a token). R-52 added the header search (HeaderSearchTest); the log filter below is unchanged.
  */
 class DotUiHeaderTest extends TestCase
 {
@@ -80,16 +80,18 @@ class DotUiHeaderTest extends TestCase
         return $m[0];
     }
 
-    // ── Search: no header search was added, the log filter is the shared one, its logic is untouched ──
+    // ── Search: the header has the shared pill (R-52); the log filter is still the shared compact one, its logic untouched ──
 
-    public function test_the_header_has_no_search_pill_because_this_platform_has_no_header_search(): void
+    public function test_the_header_has_the_shared_search_pill_over_this_companys_own_records(): void
     {
         $this->fakeInfoDot([self::url(self::ACME) => Http::response(self::body(self::ACME))]);
 
         $html = $this->actingAs($this->memberOf(self::ACME, 'Acme Ltd'))->get(route('dashboard'))->assertOk()->getContent();
 
-        $this->assertStringNotContainsString('dsr-input', $html);
-        $this->assertStringNotContainsString('role="search"', $html);
+        $this->assertStringContainsString('dsr-input', $html);
+        $this->assertStringContainsString('role="search"', $html);
+        $this->assertStringContainsString('action="'.route('search').'"', $html);
+        $this->assertStringContainsString('placeholder="Search messages, rules…"', $html);
     }
 
     public function test_the_delivery_log_filter_is_the_shared_compact_filter_with_the_same_binding(): void
@@ -239,7 +241,7 @@ class DotUiHeaderTest extends TestCase
 
         $html = $this->actingAs($this->memberOf(self::ACME, 'Acme Ltd'))->get(route('dashboard'))->assertOk()->getContent();
 
-        foreach (['css/dot-fonts.css', 'css/dot-tokens.css', 'css/dot-search.css', 'css/dot-switcher-fonts.css', 'css/dot-switcher.css', 'js/dot-switcher.js'] as $asset) {
+        foreach (['css/dot-ui.min.css', 'js/dot-ui-core.min.js'] as $asset) {
             $this->assertStringContainsString(asset('dot-ui/'.$asset), $html, $asset.' is linked from this site');
             $this->assertFileExists(public_path('dot-ui/'.$asset));
         }

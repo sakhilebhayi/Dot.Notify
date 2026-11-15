@@ -42,26 +42,26 @@
                 <p class="nf-empty">No notifications sent yet. Configure a channel and rule to get started.</p>
             @endif
         @else
-            <table class="nf-table" aria-labelledby="log-title">
+            <table class="nf-table" role="table" aria-labelledby="log-title">
                 <thead>
-                    <tr>
+                    <tr role="row">
                         <th scope="col">Recipient and subject</th>
-                        <th scope="col" class="nf-hide-sm">Event</th>
+                        <th scope="col">Event</th>
                         <th scope="col">Status</th>
-                        <th scope="col" class="nf-hide-sm">When</th>
+                        <th scope="col">When</th>
                     </tr>
                 </thead>
                 <tbody>
                 @foreach($this->logs as $log)
-                    <tr wire:key="log-{{ $log->id }}" @if($selectedLog && $selectedLog->is($log)) aria-current="true" @endif>
-                        <td class="nf-cell-main">
+                    <tr role="row" wire:key="log-{{ $log->id }}" @if($selectedLog && $selectedLog->is($log)) aria-current="true" @endif>
+                        <td class="nf-cell-main" role="cell">
                             <a href="{{ route('dashboard', array_filter(['status' => $filterStatus, 'log' => $log->id])) }}#slip" class="row-break nf-row-title"
                                x-on:click.prevent="$wire.select({{ $log->id }}).then(() => { if (window.matchMedia('(max-width: 1099.98px)').matches) { document.getElementById('slip')?.scrollIntoView({ block: 'start' }); } })">{{ $log->recipient }}</a>
                             <small class="row-break">{{ $log->subject ?? 'No subject' }}</small>
                         </td>
-                        <td class="nf-hide-sm">@if($log->event)<span class="nf-code">{{ $log->event }}</span>@else<span class="nf-soft">Not from an event</span>@endif</td>
-                        <td><x-status :kind="$logKind($log)" :label="ucfirst($log->status)" /></td>
-                        <td class="nf-when nf-hide-sm"><time datetime="{{ $log->created_at->toIso8601String() }}" title="{{ $log->created_at->format('j M Y H:i') }}">{{ $log->created_at->diffForHumans() }}</time></td>
+                        <td class="nf-cell-event" role="cell">@if($log->event)<span class="nf-code">{{ $log->event }}</span>@else<span class="nf-soft">Not from an event</span>@endif</td>
+                        <td class="nf-cell-status" role="cell"><x-status :kind="$logKind($log)" :label="ucfirst($log->status)" /></td>
+                        <td class="nf-when" role="cell"><time datetime="{{ $log->created_at->toIso8601String() }}" title="{{ $log->created_at->format('j M Y H:i') }}">{{ $log->created_at->diffForHumans() }}</time></td>
                     </tr>
                 @endforeach
                 </tbody>

@@ -2,7 +2,7 @@
      ticked, and there is ONE action (data-primary-action). Rendered by App\Support\EntitlementRefusal with HTTP 403.
      It shows nothing from the desk: no channels, rules, templates or messages. --}}
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dot-roboto">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -11,15 +11,10 @@
     <title>{{ $title }} · Dot.Notify</title>
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
-    <script>
-        (function () {
-            var stored = null;
-            try { stored = localStorage.getItem('dot-theme'); } catch (e) {}
-            if (stored === 'dark' || (!stored && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                document.documentElement.classList.add('dark');
-            }
-        })();
-    </script>
+    <script src="{{ asset('js/notify-shell.js') }}"></script>
+    <link rel="preload" href="{{ asset('dot-ui/fonts/roboto/roboto-latin-wght-normal.woff2') }}" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="{{ asset('dot-ui/css/dot-roboto.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('dot-ui/css/dot-type.min.css') }}">
     @vite(['resources/css/notify.css'])
 </head>
 <body class="nf-gate-page">

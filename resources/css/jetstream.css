@@ -1,0 +1,9 @@
+/*
+ * Tailwind for the signed-in shell's Jetstream pages. Replaces the Play CDN script that layouts/app.blade.php used to load.
+ * No preflight (see tailwind.jetstream.config.js): the notify stylesheet owns the base.
+ */
+@config "../../tailwind.jetstream.config.js";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

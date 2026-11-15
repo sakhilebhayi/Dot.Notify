@@ -447,6 +447,11 @@ jobs:
             elif [ -d public/dot-ui ] && [ ! -L "$DOCROOT/dot-ui" ]; then
               mkdir -p "$DOCROOT/dot-ui" && rsync -a --delete public/dot-ui/ "$DOCROOT/dot-ui/" && echo "== docroot dot-ui/ mirrored" || echo "::warning::could not mirror public/dot-ui to the docroot (deploy continues)"
             fi
+            # R-52: public/js/notify-shell.js (the theme script the layout loads in <head>) is a static file of ours, so it is mirrored the same
+            # way. No --delete: the docroot may hold other files of its own under js/.
+            if [ -d public/js ] && [ ! -L "$DOCROOT/js" ] && [ "$DOCROOT" != "$HOME" ] && [ "$DOCROOT_NOW" != "$APP_REAL_UI/public" ] && [ ! -f "$DEPLOY_PATH/.docroot-is-public" ]; then
+              mkdir -p "$DOCROOT/js" && rsync -a public/js/ "$DOCROOT/js/" && echo "== docroot js/ mirrored" || echo "::warning::could not mirror public/js to the docroot (deploy continues)"
+            fi
           ) || true
 
           # ---- PHP settings files: carry .user.ini / php.ini into public/ (tolerant, never fails the deploy)

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-smooth">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-smooth dot-roboto">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -11,9 +11,9 @@
         <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
         <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}">
 
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+        <link rel="preload" href="{{ asset('dot-ui/fonts/roboto/roboto-latin-wght-normal.woff2') }}" as="font" type="font/woff2" crossorigin>
+        <link rel="stylesheet" href="{{ asset('dot-ui/css/dot-roboto.min.css') }}">
+        <link rel="stylesheet" href="{{ asset('dot-ui/css/dot-type.min.css') }}">
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
 
@@ -28,9 +28,9 @@
                 --paper: #eef1ea;
                 --mist: #9aab90;
                 --line: rgba(238, 241, 234, 0.1);
-                --font-display: 'Sora', system-ui, sans-serif;
-                --font-body: 'Work Sans', system-ui, sans-serif;
-                --font-mono: 'Space Mono', ui-monospace, monospace;
+                --font-display: var(--dot-font-sans);
+                --font-body: var(--dot-font-sans);
+                --font-mono: var(--dot-font-mono);
                 --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
             }
             html { background: var(--ink); }

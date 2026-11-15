@@ -39,60 +39,60 @@ colors:
   night-rail: "#090c25"
 typography:
   title:
-    fontFamily: "Atkinson Hyperlegible Next, Segoe UI, Helvetica Neue, Arial, sans-serif"
+    fontFamily: "Roboto, Roboto Fallback, system-ui, sans-serif"
     fontSize: "2.25rem"
-    fontWeight: 750
+    fontWeight: 700
     lineHeight: 1.1
     letterSpacing: "-0.022em"
   heading:
-    fontFamily: "Atkinson Hyperlegible Next, Segoe UI, Helvetica Neue, Arial, sans-serif"
+    fontFamily: "Roboto, Roboto Fallback, system-ui, sans-serif"
     fontSize: "1.1875rem"
     fontWeight: 700
     lineHeight: 1.3
     letterSpacing: "-0.01em"
   lede:
-    fontFamily: "Atkinson Hyperlegible Next, Segoe UI, Helvetica Neue, Arial, sans-serif"
+    fontFamily: "Roboto, Roboto Fallback, system-ui, sans-serif"
     fontSize: "1.0625rem"
     fontWeight: 400
     lineHeight: 1.55
   body:
-    fontFamily: "Atkinson Hyperlegible Next, Segoe UI, Helvetica Neue, Arial, sans-serif"
+    fontFamily: "Roboto, Roboto Fallback, system-ui, sans-serif"
     fontSize: "0.9375rem"
     fontWeight: 400
     lineHeight: 1.5
   small:
-    fontFamily: "Atkinson Hyperlegible Next, Segoe UI, Helvetica Neue, Arial, sans-serif"
+    fontFamily: "Roboto, Roboto Fallback, system-ui, sans-serif"
     fontSize: "0.8125rem"
     fontWeight: 400
     lineHeight: 1.45
   title-narrow:
-    fontFamily: "Atkinson Hyperlegible Next, Segoe UI, Helvetica Neue, Arial, sans-serif"
+    fontFamily: "Roboto, Roboto Fallback, system-ui, sans-serif"
     fontSize: "1.75rem"
-    fontWeight: 750
+    fontWeight: 700
     lineHeight: 1.1
     letterSpacing: "-0.022em"
   figure:
-    fontFamily: "Atkinson Hyperlegible Next, Segoe UI, Helvetica Neue, Arial, sans-serif"
+    fontFamily: "Roboto, Roboto Fallback, system-ui, sans-serif"
     fontSize: "1.375rem"
     fontWeight: 700
     lineHeight: 1
   control:
-    fontFamily: "Atkinson Hyperlegible Next, Segoe UI, Helvetica Neue, Arial, sans-serif"
+    fontFamily: "Roboto, Roboto Fallback, system-ui, sans-serif"
     fontSize: "1rem"
     fontWeight: 400
     lineHeight: 1.4
   label:
-    fontFamily: "Atkinson Hyperlegible Next, Segoe UI, Helvetica Neue, Arial, sans-serif"
+    fontFamily: "Roboto, Roboto Fallback, system-ui, sans-serif"
     fontSize: "0.875rem"
     fontWeight: 600
     lineHeight: 1.4
   count:
-    fontFamily: "Atkinson Hyperlegible Next, Segoe UI, Helvetica Neue, Arial, sans-serif"
+    fontFamily: "Roboto, Roboto Fallback, system-ui, sans-serif"
     fontSize: "0.75rem"
     fontWeight: 700
     lineHeight: 1
   code:
-    fontFamily: "Atkinson Hyperlegible Mono, ui-monospace, SF Mono, Menlo, Consolas, monospace"
+    fontFamily: "ui-monospace, SF Mono, Menlo, Consolas, monospace"
     fontSize: "0.875rem"
     fontWeight: 500
     lineHeight: 1.4
@@ -165,9 +165,10 @@ lends the product four things and nothing else.
 
 - **Palette.** Ballpoint blue on cool duplicate-paper white. The rail is the pad's deep blue cover in both
   schemes. Highlighter yellow, the yellow of the logo, appears in exactly one place: the box that is ticked.
-- **Type.** Atkinson Hyperlegible Next, a face drawn so that no letter can be mistaken for another, for a
-  product whose whole job is that the message is read. Its Mono sets event names (`task.assigned`) and other
-  code only.
+- **Type.** Roboto, the one typeface of every Dot platform (R-52), from the shared dot-ui scale and served from
+  this site (it replaced Atkinson Hyperlegible Next, which was this platform's own face until 2026-11-15; display
+  weight 750 became 700, the title's tracking went from -0.022em to the shared -0.015em, body text is the shared
+  16px). Event names (`task.assigned`) and other code stay in the shared monospace only.
 - **Density.** Ruled rows, not cards. A section is a heading over hairline-ruled rows on the page itself.
 - **Signature move: the tick row.** The latest message is shown as a slip (To, About, Event, Through) over a
   row of six boxes, one for each status the log can really hold, with only the one that applies ticked.
@@ -220,7 +221,7 @@ One family. Fixed rem sizes, no fluid type.
 - **Body** 0.9375rem; **small** 0.8125rem for row detail and help. Nothing is set below 0.75rem.
 - **Figure** 1.375rem / 700 tabular: the record line. **Label** 0.875rem / 600: field labels and buttons.
   **Control** 1rem: inputs on phones, so iOS does not zoom. **Count** 0.75rem: the unread count only.
-- **Code** 0.875rem Mono: event names, JSON conditions.
+- **Code** 0.875rem monospace: event names, JSON conditions.
 
 ### Named Rules
 - **Sentence case, untracked.** No uppercase tracked labels, no label above a heading.
