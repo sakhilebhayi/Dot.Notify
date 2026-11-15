@@ -95,7 +95,7 @@ class ResponsiveShellTest extends TestCase
     {
         $html = $this->actingAs($this->user)->get('/dashboard')->assertOk()->getContent();
 
-        $this->assertStringContainsString(asset('dot-ui/js/dot-nav.js'), $html);
+        $this->assertStringContainsString(asset('dot-ui/js/dot-ui-core.min.js'), $html);
 
         // The shared script handles Escape, the scrim, focus return and the scroll lock for the adopted sidebar.
         $js = (string) file_get_contents(public_path('dot-ui/js/dot-nav.js'));

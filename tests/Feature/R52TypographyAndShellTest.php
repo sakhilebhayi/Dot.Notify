@@ -39,9 +39,9 @@ class R52TypographyAndShellTest extends TestCase
         $html = $this->actingAs($this->user)->get($url)->assertOk()->getContent();
 
         $this->assertMatchesRegularExpression('/<html[^>]*\bclass="dot-roboto"/', $html);
-        $this->assertStringContainsString('href="'.asset('dot-ui/css/dot-roboto.css').'"', $html);
-        $this->assertStringContainsString('href="'.asset('dot-ui/css/dot-type.css').'"', $html);
-        $this->assertStringContainsString('href="'.asset('dot-ui/fonts/roboto/roboto-latin-wght-normal.woff2').'" as="font" type="font/woff2" crossorigin', $html);
+        // dot-ui 0.6.1: one minified stylesheet carries the font-face, the type scale, tokens, search, switcher and header; no font preload.
+        $this->assertStringContainsString('href="'.asset('dot-ui/css/dot-ui.min.css').'"', $html);
+        $this->assertStringNotContainsString('as="font"', $html, 'no font preload by default (PERFORMANCE.md)');
 
         foreach (['roboto-latin-wght-normal.woff2', 'roboto-latin-ext-wght-normal.woff2', 'OFL.txt'] as $file) {
             $this->assertFileExists(public_path('dot-ui/fonts/roboto/'.$file));
@@ -180,7 +180,7 @@ class R52TypographyAndShellTest extends TestCase
         $html = $this->actingAs($this->user)->get('/dashboard')->assertOk()->getContent();
         $header = substr($html, strpos($html, '<header'), strpos($html, '</header>') - strpos($html, '<header'));
 
-        $this->assertStringContainsString('class="dh nf-header"', $header);
+        $this->assertStringContainsString('class="dh dh--nonav dh--adopt nf-header"', $header);
         $this->assertStringContainsString('aria-label="Dot.Notify home"', $header);
         $this->assertStringContainsString('src="'.asset('images/mark-light.png').'"', $header, 'the original logo file, not redrawn');
         $this->assertStringContainsString('data-dh-search', $header);
@@ -214,8 +214,7 @@ class R52TypographyAndShellTest extends TestCase
         $this->assertStringContainsString('data-dsr-escape-clear', $html, 'Escape empties it, as InfoDot\'s does');
         $this->assertStringContainsString('aria-label="Search Dot.Notify"', $html);
         $this->assertStringContainsString('aria-label="Close menu"', $html);
-        $this->assertStringContainsString('<script src="'.asset('dot-ui/js/dot-nav.js').'" defer></script>', $html);
-        $this->assertStringContainsString('<script src="'.asset('dot-ui/js/dot-search.js').'" defer></script>', $html);
+        $this->assertStringContainsString('<script src="'.asset('dot-ui/js/dot-ui-core.min.js').'" defer></script>', $html);
     }
 
     public function test_the_shared_copy_is_the_version_the_manifest_names(): void
@@ -223,10 +222,10 @@ class R52TypographyAndShellTest extends TestCase
         $lines = file(base_path('dot-ui/VERSION'), FILE_IGNORE_NEW_LINES);
 
         $this->assertMatchesRegularExpression('/^[0-9a-f]{40}$/', $lines[0]);
-        $this->assertSame('0.5.0', $lines[1]);
+        $this->assertSame('0.6.1', $lines[1]);
         $this->assertFileExists(base_path('dot-ui/MANIFEST.sha256'));
         $this->assertFileExists(resource_path('views/components/dot/header.blade.php'));
-        $this->assertFileExists(public_path('dot-ui/js/dot-nav.js'));
+        $this->assertFileExists(public_path('dot-ui/js/dot-ui-core.min.js'));
     }
 
     // ------------------------------------------------------------------ the log keeps every column on a phone
@@ -257,7 +256,7 @@ class R52TypographyAndShellTest extends TestCase
         $html = $this->get('/login')->assertOk()->getContent();
 
         $this->assertMatchesRegularExpression('/<html[^>]*\bclass="dark dot-roboto"/', $html);
-        $this->assertStringContainsString(asset('dot-ui/css/dot-roboto.css'), $html);
+        $this->assertStringContainsString(asset('dot-ui/css/dot-roboto.min.css'), $html);
         $this->assertStringNotContainsString('fonts.googleapis.com', $html);
         preg_match_all('#<style\b[^>]*>(.*?)</style>#s', $html, $styles);
         foreach ($styles[1] as $inline) {

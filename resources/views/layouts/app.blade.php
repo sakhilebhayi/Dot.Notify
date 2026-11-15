@@ -14,18 +14,12 @@
     {{-- Light or dark: the person's stored choice, else the system's, set before first paint so nothing flashes. A plain external
          file (no inline script), loaded in order. --}}
     <script src="{{ asset('js/notify-shell.js') }}"></script>
-    <link rel="preload" href="{{ asset('dot-ui/fonts/roboto/roboto-latin-wght-normal.woff2') }}" as="font" type="font/woff2" crossorigin>
-    {{-- Roboto and the shared type scale, from this site's own public/dot-ui (self-hosted: no CDN, no external font). --}}
-    <link rel="stylesheet" href="{{ asset('dot-ui/css/dot-roboto.css') }}">
-    <link rel="stylesheet" href="{{ asset('dot-ui/css/dot-type.css') }}">
+    {{-- Shared Dot UI 0.6.1 from this site's own public/dot-ui: Roboto, the type scale, tokens, search, switcher and header as ONE minified
+         stylesheet, first in the head. Self-hosted: no CDN, no external font, no font preload (PERFORMANCE.md). The host mapping block in
+         notify.css still decides the surface colours: the header tokens are on :where(:root), so any host rule wins in either order. --}}
+    <link rel="stylesheet" href="{{ asset('dot-ui/css/dot-ui.min.css') }}">
     {{-- The Message Pad (DESIGN.md): tokens, the shell and the home page. --}}
     @vite(['resources/css/notify.css'])
-    {{-- Shared Dot UI (header, search, platform switcher), served from this site's own public/dot-ui: no CDN. Loaded after the
-         app stylesheet's tokens so the host mapping block in notify.css decides the surface colours. --}}
-    <link rel="stylesheet" href="{{ asset('dot-ui/css/dot-tokens.css') }}">
-    <link rel="stylesheet" href="{{ asset('dot-ui/css/dot-search.css') }}">
-    <link rel="stylesheet" href="{{ asset('dot-ui/css/dot-switcher.css') }}">
-    <link rel="stylesheet" href="{{ asset('dot-ui/css/dot-header.css') }}">
     {{-- Tailwind, built (resources/css/jetstream.css), styles the Jetstream account pages (profile, team) that render inside this
          shell. It replaces the Play CDN script: self-hosted, no runtime compile, nothing for a CSP to block. It follows the
          notify stylesheet, as the CDN's injected <style> did, and has no preflight, so the pad's own base is untouched. --}}
@@ -177,8 +171,6 @@
 
     @stack('modals')
     @livewireScripts
-    <script src="{{ asset('dot-ui/js/dot-search.js') }}" defer></script>
-    <script src="{{ asset('dot-ui/js/dot-switcher.js') }}" defer></script>
-    <script src="{{ asset('dot-ui/js/dot-nav.js') }}" defer></script>
+    <script src="{{ asset('dot-ui/js/dot-ui-core.min.js') }}" defer></script>
 </body>
 </html>
