@@ -65,7 +65,7 @@ input[type="checkbox"].dark\:bg-gray-900 { background-color: var(--ink) !importa
 .sso-help { margin: 6px 0 0; font-size: 0.8125rem; line-height: 1.25rem; color: var(--mist); }
 .sso-error { margin: 6px 0 0; color: #ffa59c; }
 .sso-error:empty { display: none; }
-.sso-submit { width: 100%; min-height: 44px; margin-top: 12px; justify-content: center; }
+.sso-submit { width: 100%; min-height: 44px; margin-top: 12px; justify-content: center; text-transform: none; letter-spacing: normal; font-size: 0.9375rem; }
 .sso-actions { display: flex; flex-direction: column; margin-top: 8px; }
 .sso-btn { display: inline-flex; align-items: center; justify-content: center; padding: 0 16px; border-radius: 8px; background: var(--amber); color: var(--ink); font-weight: 600; text-decoration: none; }
 .sso-btn:hover { background: var(--amber-soft); }

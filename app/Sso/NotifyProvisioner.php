@@ -60,6 +60,10 @@ class NotifyProvisioner implements UserProvisioner
 
     public function sendClaimCode(Authenticatable $user, string $code, int $minutes): void
     {
-        Mail::to($user->email)->send(new SsoClaimCodeMail($user->name, $code, $minutes));
+        if ($user instanceof User) {
+            if ($user instanceof User) {
+                Mail::to($user->email)->send(new SsoClaimCodeMail($user->name, $code, $minutes));
+            }
+        }
     }
 }

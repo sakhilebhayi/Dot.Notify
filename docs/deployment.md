@@ -235,3 +235,13 @@ Code and files only. Over SSH: put the site in maintenance mode, `tar xzf ~/dot-
 - Only the first matching active rule per event is used (no fan-out).
 - Webhook-inbound and schedule logs are delivered by the minute sweeper, not instantly.
 - There is no preferences screen and no unsubscribe link in email footers (PR #6).
+
+
+### Central sign-in through InfoDot (R-54), off until the owner turns it on
+
+The shared client package (`packages/dot-sso-client`, copied from InfoDot by `sync.sh`) is in the app but does nothing while `DOTSSO_ENABLED` is false. The old `/auth/ecosystem` receiver keeps working as the fallback.
+
+1. Deploy (migrations add `users.infodot_user_uuid`, `dotsso_revocations`, `dotsso_claims`).
+2. On the InfoDot host: `php artisan sso:platform register notify --name="Dot.Notify" --domain=https://notify.infodot.co.za --redirect=https://notify.infodot.co.za/sso/callback --post-logout=https://notify.infodot.co.za/ --backchannel=https://notify.infodot.co.za/sso/backchannel-logout` (the secret is printed once).
+3. In this app's `.env`: `DOTSSO_ISSUER=https://infodot.co.za`, `DOTSSO_CLIENT_ID`, `DOTSSO_CLIENT_SECRET`, `SESSION_SECURE_COOKIE=true`, then `DOTSSO_ENABLED=true`.
+4. Check: sign in from the landing page, create an account, a second visit, sign out at InfoDot, one API call. Rollback: `DOTSSO_ENABLED=false`. Emergency local sign-in while enabled: `DOTSSO_ALLOW_LOCAL_LOGIN=true`.
