@@ -14,6 +14,19 @@ abstract class TestCase extends BaseTestCase
         parent::setUp();
         $this->withoutVite();
 
+        // The shared sign-in package's own suite (packages/dot-sso-client/tests) opens /tasks/N deep links; this app has no
+        // such page, so the test run (only) allows that one path in addition to the app's real allowlist.
+        config(['dotsso.deep_link.allow' => [...(array) config('dotsso.deep_link.allow', []), '#^/tasks(/|\?|$)#']]);
+
+        // The package suite posts to a stand-in /webhooks/stripe; here /webhooks/{token} is the app's real HMAC receiver and
+        // would match first (401). Keep that one stand-in path free in the test run; the real receiver is proven untouched by
+        // Tests\\Feature\\Sso\\CentralSignInNotifyTest.
+        foreach ($this->app['router']->getRoutes() as $route) {
+            if ($route->getName() === 'webhooks.receive') {
+                $route->where('token', '^(?!stripe$).+');
+            }
+        }
+
         // Outbound channel HTTP resolves hostnames before sending (SSRF
         // guard). Tests never touch real DNS: every hostname resolves to a
         // public documentation-range address unless a test rebinds this.
