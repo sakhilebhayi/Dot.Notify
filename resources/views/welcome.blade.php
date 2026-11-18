@@ -1,3 +1,10 @@
+@php
+    // Public sign-up here is closed: an account starts on InfoDot, and this app makes its side at the first sign-in.
+    // (The closed-registration stub is a NAMED route, so Route::has('register') is always true: never test for it.)
+    $open = \Laravel\Fortify\Features::enabled(\Laravel\Fortify\Features::registration());
+    $join = \App\Support\CentralSignIn::register($open ? route('register') : config('ecosystem.signup_url'));
+    $signIn = \App\Support\CentralSignIn::login();
+@endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-smooth dot-roboto">
     <head>
@@ -92,11 +99,11 @@
                                 Dashboard
                             </a>
                         @else
-                            <a href="{{ route('login') }}" class="hidden sm:inline-flex items-center justify-center min-h-[44px] min-w-[44px] text-sm font-medium text-[var(--mist)] hover:text-[var(--paper)] transition-colors">
+                            <a href="{{ $signIn }}" class="hidden sm:inline-flex items-center justify-center min-h-[44px] min-w-[44px] text-sm font-medium text-[var(--mist)] hover:text-[var(--paper)] transition-colors">
                                 Sign in
                             </a>
                             @if (Route::has('register'))
-                                <a href="{{ route('register') }}" class="press inline-flex items-center min-h-[44px] px-5 py-2.5 bg-[var(--amber)] hover:bg-[var(--amber-soft)] text-[#12190f] text-sm font-display font-semibold rounded-lg transition-colors">
+                                <a href="{{ $join }}" class="press inline-flex items-center min-h-[44px] px-5 py-2.5 bg-[var(--amber)] hover:bg-[var(--amber-soft)] text-[#12190f] text-sm font-display font-semibold rounded-lg transition-colors">
                                     Get started
                                 </a>
                             @endif
@@ -117,7 +124,7 @@
                     <a href="#channels" class="px-3 py-2.5 text-[var(--mist)] hover:text-[var(--paper)]">Channels</a>
                     <a href="#pipeline" class="px-3 py-2.5 text-[var(--mist)] hover:text-[var(--paper)]">Delivery pipeline</a>
                     @guest
-                        <a href="{{ route('login') }}" class="px-3 py-2.5 text-[var(--mist)] hover:text-[var(--paper)]">Sign in</a>
+                        <a href="{{ $signIn }}" class="px-3 py-2.5 text-[var(--mist)] hover:text-[var(--paper)]">Sign in</a>
                     @endguest
                 </div>
             </div>
@@ -158,7 +165,7 @@
 
                     @guest
                         <div class="flex flex-wrap items-center gap-4">
-                            <a href="{{ route('register') }}" class="press px-7 py-3.5 bg-[var(--amber)] hover:bg-[var(--amber-soft)] text-[#12190f] font-display font-semibold rounded-lg transition-colors">
+                            <a href="{{ $join }}" class="press px-7 py-3.5 bg-[var(--amber)] hover:bg-[var(--amber-soft)] text-[#12190f] font-display font-semibold rounded-lg transition-colors">
                                 Get started
                             </a>
                             <a href="#channels" class="press flex items-center gap-2 px-7 py-3.5 text-[var(--paper)] font-medium rounded-lg border border-[var(--line)] hover:border-[var(--mist)] transition-colors">
@@ -275,10 +282,10 @@
 
                 @guest
                     <div class="flex flex-wrap justify-center gap-4">
-                        <a href="{{ route('register') }}" class="press px-8 py-3.5 bg-[var(--amber)] hover:bg-[var(--amber-soft)] text-[#12190f] font-display font-semibold rounded-lg transition-colors">
+                        <a href="{{ $join }}" class="press px-8 py-3.5 bg-[var(--amber)] hover:bg-[var(--amber-soft)] text-[#12190f] font-display font-semibold rounded-lg transition-colors">
                             Get started
                         </a>
-                        <a href="{{ route('login') }}" class="press px-8 py-3.5 text-[var(--paper)] font-medium rounded-lg border border-[var(--line)] hover:border-[var(--mist)] transition-colors">
+                        <a href="{{ $signIn }}" class="press px-8 py-3.5 text-[var(--paper)] font-medium rounded-lg border border-[var(--line)] hover:border-[var(--mist)] transition-colors">
                             Sign in
                         </a>
                     </div>

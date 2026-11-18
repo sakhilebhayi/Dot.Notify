@@ -67,6 +67,9 @@ return [
     | has not marked live.
     */
 
+    // Where "Get started" goes while public sign-up here is closed: an account starts on InfoDot.
+    'signup_url' => env('DOT_SIGNUP_URL', 'https://infodot.co.za/register'),
+
     'infodot' => [
         'redeem_url' => env('INFODOT_REDEEM_URL', 'https://infodot.co.za/api/ecosystem/redeem'),
         'platform' => env('INFODOT_PLATFORM_KEY', 'notify'),
