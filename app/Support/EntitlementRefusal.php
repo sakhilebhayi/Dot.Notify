@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 
 /**
@@ -35,6 +36,31 @@ class EntitlementRefusal
                 'otherCompanies' => collect($otherCompanies)->values(),
             ], 403)
             ->header('Cache-Control', 'no-store, private');
+    }
+
+    /**
+     * R-61: InfoDot has switched Dot.Notify off (maintenance or unavailable). Plain page, 503, Retry-After 60; it reads
+     * nothing from the desk. The message is InfoDot's own sentence, shown as text (escaped by the view).
+     */
+    public static function unavailable(?string $message): Response
+    {
+        $infodot = rtrim((string) config('ecosystem.platforms.infodot.url', 'https://infodot.co.za'), '/');
+
+        return response()
+            ->view('entitlement.unavailable', [
+                'title' => 'Dot.Notify is not available right now',
+                'body' => ($message ?? 'Dot.Notify is temporarily unavailable.').' Its channels, rules, templates and message log are kept as they are.',
+                'platformsUrl' => $infodot.'/platforms/'.config('ecosystem.infodot.platform', 'notify'),
+            ], 503)
+            ->header('Cache-Control', 'no-store, private')
+            ->header('Retry-After', '60');
+    }
+
+    public static function unavailableJson(?string $message): JsonResponse
+    {
+        return response()
+            ->json(['message' => $message ?? 'Dot.Notify is temporarily unavailable.', 'reason' => 'platform_unavailable'], 503)
+            ->header('Retry-After', '60');
     }
 
     /**

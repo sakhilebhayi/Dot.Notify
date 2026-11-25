@@ -77,9 +77,13 @@ return [
         'timeout' => (int) env('INFODOT_REDEEM_TIMEOUT', 5),
         'provision' => (bool) env('INFODOT_PROVISION_USERS', true),
 
-        // R-50: during a session, ask InfoDot whether the current company still holds this platform (cached ten
-        // minutes per company; an outage or a misconfiguration never locks anyone out). See EnsureCompanyEntitled.
+        // R-50/R-61: during a session, ask InfoDot whether the current company still holds this platform and whether
+        // InfoDot has the platform switched on (answer kept one minute per company, last clear answer six hours; an
+        // outage or a misconfiguration with no answer on record never locks anyone out). See EnsureCompanyEntitled.
         'entitlement_check' => (bool) env('NOTIFY_ENTITLEMENT_CHECK', true),
+        // Only to point somewhere else than the redeem host; {uuid} is replaced with the company.
+        'entitlement_url' => env('NOTIFY_ENTITLEMENT_URL'),
+        'entitlement_timeout' => (int) env('NOTIFY_ENTITLEMENT_TIMEOUT', 3),
     ],
 
 ];
