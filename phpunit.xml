@@ -33,6 +33,7 @@
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array" force="true"/>
         <env name="ANTHROPIC_API_KEY" value=""/>
+        <env name="NOTIFY_ENTITLEMENT_CHECK" value="false" force="true"/>
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>

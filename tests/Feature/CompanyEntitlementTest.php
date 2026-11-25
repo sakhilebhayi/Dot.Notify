@@ -15,6 +15,8 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Factory;
 use Illuminate\Http\Client\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Queue;
@@ -53,6 +55,12 @@ class CompanyEntitlementTest extends TestCase
             'entitlement_check' => true,
         ]]);
         config(['ecosystem.platforms.infodot.url' => 'https://infodot.test']);
+
+        // The header's platform switcher reads the same InfoDot endpoint on its own cache. Its answer is put in place
+        // for a day so that every request InfoDot sees in these tests is the entitlement check's own.
+        foreach ([self::ACME, self::GLOBEX] as $uuid) {
+            Cache::put('infodot:platforms:notify:'.$uuid, ['ok' => false, 'personal' => false, 'rows' => []], 86400);
+        }
     }
 
     // ------------------------------------------------------------------ helpers
@@ -62,15 +70,20 @@ class CompanyEntitlementTest extends TestCase
         return 'https://infodot.test/api/ecosystem/companies/'.$uuid.'/platforms*';
     }
 
-    /** The read endpoint's body, as InfoDot's CompanyPlatformsEndpointTest asserts it. */
-    private static function platforms(string $uuid, bool $entitled, string $status): array
+    /**
+     * The read endpoint's body, as InfoDot's CompanyPlatformsEndpointTest asserts it. `$extra` is merged into Notify's
+     * own row (R-61: `available`, `message`, `features`).
+     *
+     * @param  array<string, mixed>  $extra
+     */
+    private static function platforms(string $uuid, bool $entitled, string $status, array $extra = []): array
     {
         return [
             'platform' => 'notify',
             'company' => ['uuid' => $uuid, 'personal' => false],
             'platforms' => [
                 ['key' => 'finance', 'name' => 'Dot.Finance', 'status' => 'included', 'entitled' => true, 'is_core' => true],
-                ['key' => 'notify', 'name' => 'Dot.Notify', 'status' => $status, 'entitled' => $entitled, 'is_core' => false, 'access_mode' => 'everyone'],
+                ['key' => 'notify', 'name' => 'Dot.Notify', 'status' => $status, 'entitled' => $entitled, 'is_core' => false, 'access_mode' => 'everyone'] + $extra,
                 ['key' => 'hr', 'name' => 'Dot.HR', 'status' => 'free_while_pricing_finalised', 'entitled' => false, 'is_core' => false],
                 ['key' => 'infodot', 'name' => 'InfoDot', 'status' => 'included', 'entitled' => true, 'is_core' => true],
             ],
@@ -289,7 +302,7 @@ class CompanyEntitlementTest extends TestCase
         Log::shouldHaveReceived('warning')->withArgs(fn ($message) => str_contains($message, 'InfoDot entitlement check gave no answer'))->once();
     }
 
-    public function test_a_failure_is_remembered_for_a_minute_and_an_answer_for_ten(): void
+    public function test_a_failure_is_remembered_for_a_minute_and_an_answer_for_a_minute(): void
     {
         [$owner, $team] = $this->company();
         $this->infodotSays([self::readUrl(self::ACME) => Http::sequence()
@@ -347,7 +360,9 @@ class CompanyEntitlementTest extends TestCase
 
     public function test_the_flag_is_on_by_default(): void
     {
-        $this->assertTrue((require config_path('ecosystem.php'))['infodot']['entitlement_check']);
+        // phpunit.xml forces the variable off for the rest of the suite (tests turn the check on themselves), so the
+        // shipped default is read from the config file: with the variable unset the check is on.
+        $this->assertStringContainsString("env('NOTIFY_ENTITLEMENT_CHECK', true)", file_get_contents(config_path('ecosystem.php')));
         $this->assertStringContainsString('NOTIFY_ENTITLEMENT_CHECK=true', file_get_contents(base_path('.env.example')));
     }
 
@@ -628,6 +643,303 @@ class CompanyEntitlementTest extends TestCase
         $this->actingAs($owner)->get(route('teams.show', $other))->assertForbidden()->assertDontSee('Globex Corporation');
 
         Http::assertNotSent(fn (Request $request) => str_contains($request->url(), self::GLOBEX));
+    }
+
+    // ------------------------------------------------------------------ R-61: InfoDot has switched the platform off
+
+    /** @return array<string, mixed> Notify's row when InfoDot has put the platform in maintenance */
+    private static function off(?string $message = 'Dot.Notify is in maintenance until 14:00.'): array
+    {
+        return ['available' => false, 'message' => $message, 'features' => []];
+    }
+
+    private function signOutOfTheTestGuard(): void
+    {
+        $this->app['auth']->forgetGuards();
+        $this->app['auth']->shouldUse('web');
+        $this->flushSession();
+    }
+
+    /** Every table read while the callback runs. */
+    private function tablesRead(Closure $callback): array
+    {
+        $queries = [];
+        DB::listen(function ($query) use (&$queries) {
+            $queries[] = $query->sql;
+        });
+        $callback();
+
+        return $queries;
+    }
+
+    public function test_an_unavailable_platform_answers_503_with_the_plain_page_and_reads_no_data(): void
+    {
+        [$owner, $team, $channel] = $this->company();
+        $this->infodotSays([self::readUrl(self::ACME) => Http::response(self::platforms(self::ACME, true, 'active', self::off('Back at <b>14:00</b>.')))]);
+
+        foreach ([route('dashboard'), route('connected-apps'), route('search', ['q' => 'Acme']), route('teams.show', $team)] as $url) {
+            $response = $this->actingAs($owner)->get($url)
+                ->assertStatus(503)
+                ->assertHeader('Retry-After', '60')
+                ->assertSee('Dot.Notify is not available right now')
+                ->assertSee('Back at &lt;b&gt;14:00&lt;/b&gt;.', false)
+                ->assertDontSee('Back at <b>14:00</b>.', false)
+                ->assertDontSee('Acme Ops Mailbox')
+                ->assertDontSee('Overdue');
+
+            $this->assertStringContainsString('no-store', (string) $response->headers->get('Cache-Control'));
+            $this->assertSame(1, substr_count($response->getContent(), 'data-primary-action'), $url);
+        }
+
+        $this->assertSame(1, NotifyChannel::withoutGlobalScopes()->count());
+        $this->assertSame('Acme Ops Mailbox', $channel->fresh()->name, 'nothing is deleted or changed');
+    }
+
+    public function test_nothing_from_the_desk_is_read_behind_a_503_or_a_403(): void
+    {
+        [$owner] = $this->company();
+
+        foreach ([self::platforms(self::ACME, true, 'active', self::off()), self::platforms(self::ACME, false, 'suspended')] as $body) {
+            Cache::flush();
+            $this->infodotSays([self::readUrl(self::ACME) => Http::response($body)]);
+            $this->actingAs($owner);
+
+            $queries = $this->tablesRead(fn () => $this->get(route('dashboard'))->assertStatus($body['platforms'][1]['entitled'] ? 503 : 403));
+
+            $this->assertSame([], array_values(array_filter($queries, fn ($sql) => str_contains($sql, 'notify_'))), 'no notify_ table is read');
+        }
+    }
+
+    public function test_the_unavailable_state_is_checked_before_what_the_company_holds(): void
+    {
+        [$owner] = $this->company();
+        $this->infodotSays([self::readUrl(self::ACME) => Http::response(self::platforms(self::ACME, false, 'suspended', self::off()))]);
+
+        $this->actingAs($owner)->get(route('dashboard'))->assertStatus(503)->assertDontSee('is suspended');
+    }
+
+    public function test_a_json_request_to_an_unavailable_platform_gets_json_503_with_retry_after(): void
+    {
+        [$owner] = $this->company();
+        $this->infodotSays([self::readUrl(self::ACME) => Http::response(self::platforms(self::ACME, true, 'active', self::off()))]);
+
+        $this->actingAs($owner)->getJson(route('connected-apps'))
+            ->assertStatus(503)
+            ->assertHeader('Retry-After', '60')
+            ->assertExactJson(['message' => 'Dot.Notify is in maintenance until 14:00.', 'reason' => 'platform_unavailable']);
+    }
+
+    public function test_without_a_message_the_page_and_the_json_use_a_plain_sentence(): void
+    {
+        [$owner] = $this->company();
+        $this->infodotSays([self::readUrl(self::ACME) => Http::response(self::platforms(self::ACME, true, 'active', self::off(null)))]);
+
+        $this->actingAs($owner)->get(route('dashboard'))->assertStatus(503)->assertSee('Dot.Notify is temporarily unavailable.');
+        $this->actingAs($owner)->getJson(route('dashboard'))->assertStatus(503)->assertJsonPath('message', 'Dot.Notify is temporarily unavailable.');
+    }
+
+    public function test_a_livewire_update_is_answered_503_json_and_changes_nothing_when_the_platform_is_unavailable(): void
+    {
+        [$owner, $team] = $this->company();
+        $this->infodotSays([self::readUrl(self::ACME) => Http::sequence()
+            ->push(self::platforms(self::ACME, true, 'active'))
+            ->push(self::platforms(self::ACME, true, 'active', self::off()))]);
+        $this->actingAs($owner);
+        $count = fn () => NotifyChannel::withoutGlobalScopes()->where('team_id', $team->id)->count();
+        $before = $count();
+        $snapshot = $this->livewireSnapshot();
+
+        $this->travel(EntitlementClient::ANSWER_TTL + 1)->seconds();
+        $response = $this->livewireAddChannel($snapshot, 'Third mailbox');
+
+        $this->assertSame(503, $response->getStatusCode(), substr($response->getContent(), 0, 400));
+        $this->assertSame('60', $response->headers->get('Retry-After'));
+        $this->assertSame('platform_unavailable', $response->json('reason'));
+        $this->assertStringNotContainsString('snapshot', $response->getContent());
+        $this->assertSame($before, $count(), 'the data is unchanged');
+        $this->assertDatabaseMissing('notify_channels', ['name' => 'Third mailbox']);
+    }
+
+    public function test_broadcasting_auth_for_a_signed_in_person_is_503_json_when_the_platform_is_unavailable(): void
+    {
+        [$owner] = $this->company();
+        $this->infodotSays([self::readUrl(self::ACME) => Http::response(self::platforms(self::ACME, true, 'active', self::off()))]);
+
+        $this->actingAs($owner)->postJson('/broadcasting/auth', ['socket_id' => '1234.5678', 'channel_name' => 'private-App.Models.User.'.$owner->id])
+            ->assertStatus(503)->assertHeader('Retry-After', '60');
+    }
+
+    public function test_an_older_infodot_with_no_available_key_or_an_available_true_is_not_a_switch_off(): void
+    {
+        [$owner] = $this->company();
+        $this->infodotSays([self::readUrl(self::ACME) => Http::response(self::platforms(self::ACME, true, 'active'))]);
+        $this->actingAs($owner)->get(route('connected-apps'))->assertOk();
+
+        Cache::flush();
+        $this->infodotSays([self::readUrl(self::ACME) => Http::response(self::platforms(self::ACME, true, 'active', ['available' => true, 'message' => 'All well', 'features' => []]))]);
+        $this->actingAs($owner)->get(route('connected-apps'))->assertOk();
+    }
+
+    public function test_the_message_is_cut_to_400_characters_and_features_are_read_or_ignored(): void
+    {
+        $this->infodotSays([self::readUrl(self::ACME) => Http::response(self::platforms(self::ACME, true, 'active', [
+            'available' => false,
+            'message' => str_repeat('a', 500),
+            'features' => ['sms' => ['state' => 'disabled', 'message' => 'SMS is paused.'], 'bad' => 'nope', 'worse' => ['state' => 7]],
+        ]))]);
+
+        $answer = app(EntitlementClient::class)->forCompany(self::ACME);
+
+        $this->assertSame(400, mb_strlen($answer['message']));
+        $this->assertFalse($answer['available']);
+        $this->assertSame(['sms' => ['state' => 'disabled', 'message' => 'SMS is paused.']], $answer['features']);
+    }
+
+    public function test_the_last_clear_answer_is_used_when_infodot_cannot_be_reached(): void
+    {
+        [$owner] = $this->company();
+        $this->infodotSays([self::readUrl(self::ACME) => Http::sequence()
+            ->push(self::platforms(self::ACME, true, 'active', self::off()))
+            ->push('boom', 500)]);
+
+        $this->actingAs($owner)->get(route('connected-apps'))->assertStatus(503);
+
+        // The one-minute answer has gone and InfoDot is down: the platform last told unavailable stays unavailable.
+        $this->travel(EntitlementClient::ANSWER_TTL + 1)->seconds();
+        $this->actingAs($owner)->get(route('connected-apps'))->assertStatus(503);
+        Http::assertSentCount(2);
+    }
+
+    public function test_a_company_last_told_it_could_work_keeps_working_through_an_outage_for_six_hours_and_then_carries_on(): void
+    {
+        [$owner] = $this->company();
+        $this->infodotSays([self::readUrl(self::ACME) => Http::sequence()
+            ->push(self::platforms(self::ACME, false, 'suspended'))
+            ->whenEmpty(Http::response('boom', 500))]);
+
+        $this->actingAs($owner)->get(route('connected-apps'))->assertStatus(403);
+
+        // Last known good: still refused during the outage (a company last refused is not let in by a failure) ...
+        $this->travel(EntitlementClient::ANSWER_TTL + 1)->seconds();
+        $this->actingAs($owner)->get(route('connected-apps'))->assertStatus(403);
+
+        // ... but once the answer is older than six hours there is nothing on record, and it carries on.
+        $this->travel(EntitlementClient::LAST_KNOWN_TTL)->seconds();
+        $this->actingAs($owner)->get(route('connected-apps'))->assertOk();
+    }
+
+    public function test_with_no_answer_ever_the_person_carries_on(): void
+    {
+        [$owner] = $this->company();
+        $this->infodotSays([self::readUrl(self::ACME) => fn () => throw new ConnectionException('timed out')]);
+
+        $this->actingAs($owner)->get(route('dashboard'))->assertOk()->assertSee('Acme Ops Mailbox');
+        $this->actingAs($owner)->getJson(route('connected-apps'))->assertOk();
+    }
+
+    public function test_an_entitled_company_that_was_unavailable_works_again_when_infodot_says_so(): void
+    {
+        [$owner] = $this->company();
+        $this->infodotSays([self::readUrl(self::ACME) => Http::sequence()
+            ->push(self::platforms(self::ACME, true, 'active', self::off()))
+            ->push(self::platforms(self::ACME, true, 'active'))]);
+
+        $this->actingAs($owner)->get(route('connected-apps'))->assertStatus(503);
+        $this->travel(EntitlementClient::ANSWER_TTL + 1)->seconds();
+        $this->actingAs($owner)->get(route('connected-apps'))->assertOk();
+    }
+
+    public function test_the_service_secret_the_platform_header_and_the_configured_url_and_timeout_are_used(): void
+    {
+        [$owner] = $this->company();
+        config(['ecosystem.infodot.entitlement_url' => 'https://other.infodot.test/read/{uuid}/platforms', 'ecosystem.infodot.entitlement_timeout' => 7]);
+        $this->infodotSays(['https://other.infodot.test/read/'.self::ACME.'/platforms*' => Http::response(self::platforms(self::ACME, true, 'active'))]);
+
+        $this->actingAs($owner)->get(route('connected-apps'))->assertOk();
+
+        Http::assertSent(fn (Request $request) => str_starts_with($request->url(), 'https://other.infodot.test/read/'.self::ACME.'/platforms')
+            && $request->hasHeader('X-Dot-Platform', 'notify')
+            && $request->hasHeader('Authorization', 'Bearer '.$this->credential));
+    }
+
+    public function test_a_personal_workspace_is_never_asked_about_even_when_the_platform_is_unavailable(): void
+    {
+        $person = User::factory()->withPersonalTeam()->create();
+        $this->infodotSays([]);
+
+        // Nothing remembered at sign-in, or true: carries on, no call.
+        $this->actingAs($person)->get(route('connected-apps'))->assertOk();
+        $this->withSession([EnsureCompanyEntitled::PERSONAL => true])->get(route('connected-apps'))->assertOk();
+        // What redeem said at sign-in rules a personal workspace: exactly false is the refusal, still with no call.
+        $this->withSession([EnsureCompanyEntitled::PERSONAL => false])->get(route('connected-apps'))->assertStatus(403);
+
+        Http::assertNothingSent();
+    }
+
+    public function test_the_always_open_routes_stay_reachable_when_the_platform_is_unavailable(): void
+    {
+        [$owner, $acme] = $this->company();
+        [, $globex] = $this->company(self::GLOBEX, 'Globex Corporation', $owner);
+        $owner->forceFill(['current_team_id' => $acme->id])->save();
+        $this->infodotSays([self::readUrl(self::ACME) => Http::response(self::platforms(self::ACME, true, 'active', self::off()))]);
+
+        $this->actingAs($owner->fresh())->get(route('dashboard'))->assertStatus(503);
+        Http::assertSentCount(1);
+
+        // Own account, legal pages, switching company and signing out never ask and are never held back.
+        $this->get(route('profile.show'))->assertOk();
+        $this->get('/cookies')->assertOk();
+        $this->put(route('current-team.update'), ['team_id' => $globex->id])->assertRedirect();
+        $this->assertSame($globex->id, $owner->fresh()->current_team_id);
+        $this->post(route('logout'))->assertRedirect();
+        $this->get('/')->assertOk();
+        $this->get('/login')->assertOk();
+        $this->get('/up')->assertOk();
+
+        Http::assertSentCount(1);
+    }
+
+    public function test_machine_endpoints_and_public_pages_are_unguarded_when_the_platform_is_unavailable(): void
+    {
+        [$owner, $team] = $this->company();
+        $this->infodotSays([self::readUrl(self::ACME) => Http::response(self::platforms(self::ACME, true, 'active', self::off()))]);
+        $this->actingAs($owner)->get(route('dashboard'))->assertStatus(503);
+        $this->signOutOfTheTestGuard();
+
+        // The ingest API still accepts, queues and routes an event from another Dot app.
+        Queue::fake();
+        $secret = Str::random(32);
+        config(['notify.ingest.secrets' => ['finance' => $secret], 'notify.ingest.rate_limit_per_minute' => 100]);
+        $raw = json_encode(['platform' => 'finance', 'company_uuid' => self::ACME, 'event' => 'invoice.reminder', 'recipient' => ['email' => 'amara@example.test'], 'data' => ['name' => 'Amara', 'number' => 'INV-9'], 'idempotency_key' => 'inv-9']);
+        $timestamp = now()->timestamp;
+
+        $this->call('POST', '/api/ingest/events', [], [], [], [
+            'CONTENT_TYPE' => 'application/json', 'HTTP_ACCEPT' => 'application/json',
+            'HTTP_X_INFODOT_TIMESTAMP' => $timestamp,
+            'HTTP_X_INFODOT_SIGNATURE' => 'sha256='.hash_hmac('sha256', $timestamp.'.'.$raw, $secret),
+        ], $raw)->assertStatus(202);
+        $this->assertSame('queued', NotifyLog::withoutGlobalScopes()->where('team_id', $team->id)->firstOrFail()->status);
+
+        // The inbound webhook receiver reaches its own signature check, health checks answer, public pages open.
+        $this->postJson('/webhooks/'.Str::random(20), [])->assertStatus(401);
+        $this->get('/up')->assertOk();
+        $this->get('/')->assertOk();
+        $this->get('/cookies')->assertOk();
+        $this->get('/auth/ecosystem')->assertRedirect('/login');
+        $this->get('/up/realtime');
+
+        // Broadcasting auth with no signed-in person is never answered by the entitlement check (the test broadcaster is null).
+        $this->assertNotSame(503, $this->postJson('/broadcasting/auth', ['socket_id' => '1234.5678', 'channel_name' => 'private-x'])->getStatusCode());
+
+        Http::assertSentCount(1); // only the one signed-in request's own question
+    }
+
+    public function test_sign_in_and_the_check_use_the_same_company_answer_shape_for_the_unavailable_row(): void
+    {
+        // The redeem answer is unchanged by R-61: an entitled company is admitted at sign-in even though the read
+        // endpoint would later say the platform is unavailable (the page, not the sign-in, tells the person).
+        $this->signIn('ann@acme.test', [$this->redeemTeam(self::ACME, 'Acme Ltd', 'owner', true)], self::ACME)->assertRedirect(route('dashboard'));
+        $this->assertAuthenticated();
     }
 
     public function test_livewire_updates_from_the_signed_in_area_carry_the_check(): void

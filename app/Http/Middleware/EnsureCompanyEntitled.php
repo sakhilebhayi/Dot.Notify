@@ -7,18 +7,21 @@ use App\Models\User;
 use App\Services\InfoDot\EntitlementClient;
 use App\Support\EntitlementRefusal;
 use Closure;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * The signed-in area honours the company's entitlement (R-50).
+ * The signed-in area honours the company's entitlement (R-50) and InfoDot's switch for the platform (R-61).
  *
- * InfoDot decides whether a company holds Dot.Notify. A person who is already signed in must stop working when that
- * ends, so each request in the signed-in area asks (through a ten-minute cache) whether the current company still
- * holds the platform. A clear "no" answers with the plain refusal page and HTTP 403 (a bare 403 on a Livewire update
- * or broadcasting auth): nothing is read or changed. Anything else, including every kind of failure, lets the
- * request through exactly as before.
+ * InfoDot decides whether a company holds Dot.Notify, and whether the platform is available at all. A person who is
+ * already signed in must stop working when either changes, so each request in the signed-in area asks (through a
+ * one-minute cache, see EntitlementClient) about the current company. A clear "no" answers with the plain refusal
+ * page and HTTP 403 (a bare 403 on a Livewire update or broadcasting auth): nothing is read or changed. A platform
+ * InfoDot has switched off answers 503 with Retry-After 60 (the plain "not available right now" page, or JSON for
+ * JSON and Livewire requests); nothing is read or changed either. Anything else, including every kind of failure with
+ * no earlier answer on record, lets the request through exactly as before.
  *
  * It sits on the signed-in route group (routes/web.php), on Jetstream's own pages (config/jetstream.php), on
  * /broadcasting/auth (EnsureCompanyEntitledForBroadcast) and is a Livewire persistent middleware. It is not on
@@ -29,6 +32,7 @@ class EnsureCompanyEntitled
 {
     /** Routes inside the checked groups that must keep working for a person whose company is refused. */
     private const EXEMPT = [
+        'logout',              // leaving
         'current-team.update', // switching to another company
         'profile.show',        // the person's own account
         'terms.show', 'policy.show', 'team-invitations.accept',
@@ -74,6 +78,13 @@ class EnsureCompanyEntitled
 
         $answer = $this->entitlements->forCompany((string) $team->infodot_team_uuid);
 
+        // R-61: a platform InfoDot has switched off (maintenance, unavailable) is off for everyone, whatever they hold.
+        // Nothing is deleted or changed; the page says so plainly. Checked before what the company holds, because it is
+        // a different question. An older InfoDot gives no `available`, which the client reads as available.
+        if ($answer !== null && ! $answer['available']) {
+            return $this->unavailable($request, $answer['message']);
+        }
+
         if ($answer === null || $answer['entitled'] === true) {
             return $next($request);
         }
@@ -83,6 +94,21 @@ class EnsureCompanyEntitled
             $team->name,
             $user->allTeams()->reject(fn ($other) => $other->id === $team->id),
         ));
+    }
+
+    /**
+     * 503 "temporarily unavailable" (Retry-After 60). JSON for API-style and Livewire requests, the plain page otherwise.
+     * Livewire throws away a persistent middleware's non-redirect return, so there the response is thrown instead.
+     */
+    private function unavailable(Request $request, ?string $message): Response
+    {
+        $livewire = $request->headers->has('X-Livewire') || request()->headers->has('X-Livewire');
+
+        if ($livewire) {
+            throw new HttpResponseException(EntitlementRefusal::unavailableJson($message));
+        }
+
+        return $request->expectsJson() ? EntitlementRefusal::unavailableJson($message) : EntitlementRefusal::unavailable($message);
     }
 
     /**
